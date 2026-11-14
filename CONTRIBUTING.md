@@ -26,6 +26,8 @@ Refs: #<issue番号>
 
 `type`: `feat` / `fix` / `docs` / `refactor` / `test` / `chore` / `ci`
 
+トレーラーは `Refs:` のみ。`Co-Authored-By:`(AI ツールが付けるものを含む)は付けない。
+
 `Refs:` はコミット時に hook がブランチ名から自動で付ける。hook はブランチ名の形式も検査し、合わなければコミットを止める。devcontainer では自動で有効になる。それ以外の環境では次で有効にする。
 
 ```sh
