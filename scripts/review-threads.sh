@@ -23,7 +23,7 @@ query($owner: String!, $repo: String!, $pr: Int!) {
     pullRequest(number: $pr) {
       reviewThreads(first: 100) {
         nodes {
-          id isResolved path line
+          id isResolved path line originalLine
           comments(first: 1) { nodes { databaseId body } }
         }
       }
@@ -33,7 +33,7 @@ query($owner: String!, $repo: String!, $pr: Int!) {
   | .value.comments.nodes[0] as \$c
   | {no: (.key + 1), resolved: .value.isResolved,
      state: (if .value.isResolved then \"resolved\" else \"open\" end),
-     loc: \"\(.value.path):\(.value.line)\",
+     loc: \"\(.value.path):\(.value.line // .value.originalLine)\",
      title: (\$c.body | split(\"\n\")[0] | gsub(\"\\\\*\\\\*\"; \"\") | .[0:60]),
      comment: \$c.databaseId, thread: .value.id}
   | $filter | [$cols] | @tsv"
