@@ -26,4 +26,4 @@ jobs:
             指摘が 0 件なら `gh pr comment ${{ github.event.pull_request.number }} --body "Claude レビュー: 指摘なし"` を実行する。
             それ以外の投稿はしない。
           claude_args: |
-            --allowedTools "Read,Grep,Glob,Skill,mcp__github_inline_comment__create_inline_comment,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(gh api:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*)"
+            --allowedTools "Read,Grep,Glob,Skill,mcp__github_inline_comment__create_inline_comment,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*)"
