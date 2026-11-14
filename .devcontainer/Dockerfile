@@ -20,6 +20,13 @@ RUN chmod 755 /usr/local/bin/init-firewall.sh \
     && echo "vscode ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh" > /etc/sudoers.d/vscode-firewall \
     && chmod 0440 /etc/sudoers.d/vscode-firewall
 
+ARG TASK_VERSION=3.54.0
+RUN deb="task_${TASK_VERSION}_linux_$(dpkg --print-architecture).deb" \
+    && base="https://github.com/go-task/task/releases/download/v${TASK_VERSION}" \
+    && cd /tmp && curl -fsSLO "$base/$deb" \
+    && curl -fsSL "$base/task_checksums.txt" | grep " $deb\$" | sha256sum -c \
+    && dpkg -i "$deb" && rm "$deb"
+
 RUN mkdir -p /home/vscode/.claude && chown vscode:vscode /home/vscode/.claude
 USER vscode
 
