@@ -24,13 +24,13 @@ Go 用の Prisma Client(`steebchen/prisma-client-go`)は Prisma v7 以降に対�
 判断の根拠:
 
 1. **Prisma Client を使える。** 学習目的を満たす。
-2. **言語が 1 つで済む。** 画面と API で型を共有でき、実装量が一番少なくなる。
+2. **言語が 1 つで済む。** 画面は API の型(Hono RPC の `AppType`)を `import type` で参照でき(ADR-0003)、実装量が一番少なくなる。
 
 ### 規則
 
 | 対象 | 必須 | 禁止 |
 |---|---|---|
-| リポジトリ全体 | アプリケーションのコードは `apps/web`(画面)と `apps/api`(API)に置く | Go など、TypeScript 以外の言語でアプリケーションのコードを書く(`scripts/` のシェルスクリプトと、ADR-0002 の規則に従って編集する `apps/api/prisma/migrations/` の SQL は対象外) |
+| リポジトリ全体 | アプリケーションのコードは `apps/web`(画面)と `apps/api`(API)に置く | Go など、TypeScript 以外の言語でアプリケーションのコードを書く(次は対象外: `scripts/` のシェルスクリプト、ADR-0002 で定める `apps/api/prisma/schema.prisma`、ADR-0002 の規則に従って編集する `apps/api/prisma/migrations/` の SQL、Vite が必要とする `apps/web/index.html` と `apps/web` の CSS) |
 | `apps/*` のソース | 拡張子は `.ts` / `.tsx`。`tsconfig` は `"strict": true` | `.js` / `.jsx` のソースを手で書く(ツールの設定ファイルは対象外) |
 | `apps/api` | HTTP の受付は Hono で行う。Node 上で `@hono/node-server` を使って起動する | Express、Fastify、NestJS など、Hono 以外の HTTP フレームワークを入れる |
 

@@ -31,16 +31,18 @@
 | 対象 | 必須 | 禁止 |
 |---|---|---|
 | `apps/web` | Vite + React で SPA にする | Next.js、Remix、`hono/jsx` によるサーバ側の描画を使う |
-| `apps/web` のデータアクセス | 取得も登録も、API の `/api/*` を呼んで行う | DB への接続。Prisma Client(生成された Client と `@prisma/client`)や `apps/api` のコードを import する |
-| API のパス | すべて `/api` で始める | `/api` で始まらない API のパスを作る |
-| 本番での配信 | `apps/api` が `apps/web` のビルド結果を `/` で配信する。`/api` 以外のパスへの GET には `index.html` を返す | 画面と API を別のオリジンで配信する |
-| 開発時 | Vite の proxy で `/api` を `apps/api` に転送する | CORS のミドルウェアを入れる |
+| `apps/web` のデータアクセス | 取得も登録も、API の `/api/` 以下を呼んで行う。API の型は、`apps/api/src/app.ts` が export する `AppType` だけを `import type` で参照し、Hono RPC(`hc<AppType>`)で呼ぶ | DB への接続。Prisma Client(生成された Client と `@prisma/client`)を import する。`AppType` の `import type` 以外で `apps/api` のコードを import する |
+| API のパス | すべて `/api/` で始める | `/api/` で始まらない API のパスを作る(`/api-docs` のように、`/api` の後に `/` が続かないものも含む) |
+| 本番での配信 | `apps/api` が `apps/web` のビルド結果を `/` で配信する。`/api/` 以外のパスへの GET は、ビルド結果に該当するファイルがあればそれを返す。ファイルがない場合、拡張子のあるパス(`/assets/x.js` など)には 404 を、拡張子のないパスには `index.html` を返す | 画面と API を別のオリジンで配信する。存在しない静的ファイルへの GET に `index.html` を返す |
+| 開発時 | Vite の proxy で `/api/` 以下を `apps/api` に転送する | CORS のミドルウェアを入れる |
 | 環境変数 | `VITE_` で始まる変数には、公開してよい値だけを入れる | `VITE_` で始まる変数に、秘密の値や接続情報を入れる(ビルド結果に埋め込まれるため) |
 | ブラウザの保存領域 | localStorage と sessionStorage には、表示の設定だけを保存する | トークン、患者の ID、配信スケジュールのデータを保存する |
 
 ## 結果
 
-- 良い面: CORS が不要になる。認証を入れるときに、HttpOnly の Cookie によるセッションをそのまま使える。
+- 良い面: CORS が不要になる。認証を入れるときに、画面と API が同じオリジンなので HttpOnly の Cookie によるセッションを使える。
 - 受け入れた不利益: ビルドの仕組み(Vite)が要る。画面の状態を画面側で管理する。
-- 未解決の保留事項: API の呼び出し方、フォーム、ルータに使うライブラリは、別の ADR で決める。
-- 移行作業: `apps/web` から import してよいものを、lint(`no-restricted-imports`)で検査する。
+- 未解決の保留事項:
+  - フォーム、ルータに使うライブラリは、別の ADR で決める。
+  - 認証を入れるときは、CSRF 対策(Cookie の `SameSite`、状態を変えるリクエストでの `Origin` ヘッダーの検査)を同時に入れる。
+- 移行作業: `apps/web` から import してよいものを、lint(`no-restricted-imports`)で検査する。`apps/api` からは `apps/api/src/app.ts` の `AppType` の `import type` だけを許可する。
