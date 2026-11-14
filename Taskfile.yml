@@ -17,6 +17,6 @@ tasks:
       - sh: test -n "{{.PR}}"
         msg: PR が見つからない。PR=<番号> で指定する
     env:
-      ARGS: '{{.CLI_ARGS}}'
+      PROMPT: '/addressing-review-comments {{.PR}} {{.CLI_ARGS}}'
     cmds:
-      - claude "/addressing-review-comments {{.PR}} $ARGS"
+      - claude "$PROMPT"
