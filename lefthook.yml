@@ -1,0 +1,14 @@
+pre-commit:
+  jobs:
+    - name: branch-name
+      run: scripts/hooks/check-branch-name.sh
+
+prepare-commit-msg:
+  jobs:
+    - name: draft-message
+      run: scripts/hooks/draft-commit-msg.sh {0}
+
+commit-msg:
+  jobs:
+    - name: refs
+      run: scripts/hooks/add-refs.sh {1}
