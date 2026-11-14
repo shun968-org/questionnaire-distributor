@@ -19,20 +19,22 @@ gh issue develop 12 --base main --name feat/12-questionnaire-schedule --checkout
 [Conventional Commits](https://www.conventionalcommits.org/ja/v1.0.0/) に従う。
 
 ```
-<type>: <要約>
+<type>[(scope)]: <要約>
 
 Refs: #<issue番号>
 ```
 
-`type`: `feat` / `fix` / `docs` / `refactor` / `test` / `chore` / `ci`
+`type`: `feat` / `fix` / `docs` / `refactor` / `test` / `chore` / `ci`。scope は任意。要約は日本語で「〜を追加する」のように書く。
 
 トレーラーは `Refs:` のみ。`Co-Authored-By:`(AI ツールが付けるものを含む)は付けない。
 
-`Refs:` はコミット時に hook がブランチ名から自動で付ける。hook はブランチ名の形式も検査し、合わなければコミットを止める。devcontainer では自動で有効になる。それ以外の環境では次で有効にする。
+git hook は [lefthook](https://github.com/evilmartians/lefthook)(`lefthook.yml`)で登録する。Dev container では自動で入る。それ以外の環境では lefthook をインストールして `lefthook install` を実行する。
 
-```sh
-git config core.hooksPath .githooks
-```
+| hook | 内容 |
+|---|---|
+| pre-commit | ブランチ名が `<種別>/<issue番号>-<内容>` でなければコミットを止める |
+| prepare-commit-msg | `-m` などでメッセージを指定しないとき、ステージした差分と issue から Claude Haiku がメッセージを下書きする(`claude` と `gh` にログインが必要。失敗したら下書きなし) |
+| commit-msg | ブランチ名の issue 番号を `Refs: #N` として付ける |
 
 コミットはそのまま `main` に入るので、粒度と内容を整えてから PR を出す。
 
