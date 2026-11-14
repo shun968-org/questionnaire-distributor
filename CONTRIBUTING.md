@@ -1,9 +1,18 @@
 # CONTRIBUTING
 
+## Issue
+
+作業は必ず Issue から始める(No Issue, No Branch)。テンプレートは `.github/ISSUE_TEMPLATE/`。
+
 ## ブランチ
 
 - `main` に直接 push しない。作業は `main` から切ったブランチで行い、PR でマージする。
-- ブランチ名: `<種別>/<内容>`(例: `feat/questionnaire-schedule`、`fix/login-redirect`)。種別はコミットと同じ。
+- ブランチは `gh issue develop` で作り、Issue に紐づける(`git checkout -b` では紐づかない)。
+- ブランチ名: `<種別>/<issue番号>-<内容>`(例: `feat/12-questionnaire-schedule`、`fix/34-login-redirect`)。種別はコミットと同じ。
+
+```sh
+gh issue develop 12 --base main --name feat/12-questionnaire-schedule --checkout
+```
 
 ## コミット
 
@@ -11,19 +20,28 @@
 
 ```
 <type>: <要約>
+
+Refs: #<issue番号>
 ```
 
 `type`: `feat` / `fix` / `docs` / `refactor` / `test` / `chore` / `ci`
 
+`Refs:` はコミット時に hook がブランチ名から自動で付ける。hook はブランチ名の形式も検査し、合わなければコミットを止める。devcontainer では自動で有効になる。それ以外の環境では次で有効にする。
+
+```sh
+git config core.hooksPath .githooks
+```
+
+コミットはそのまま `main` に入るので、粒度と内容を整えてから PR を出す。
+
 ## PR とマージ
 
-1. PR を作る(テンプレートに沿って概要と確認内容を書く)。関連 issue は `Closes #番号` で紐付ける。
-2. **squash マージのみ**。PR タイトルがそのまま `main` のコミットメッセージになるため、タイトルも Conventional Commits 形式にする。
+1. PR を作る(テンプレートに沿って概要と確認内容を書く)。`Closes #番号` で Issue を紐付ける(必須)。タイトルは Conventional Commits 形式。
+2. GitHub の画面から **rebase マージ**する(squash・merge commit は無効)。コミットは粒度を変えずに `main` へ直線で並ぶ。
 3. マージ後のブランチは自動で削除される。
 
 ```sh
-gh pr create --fill
-gh pr merge --squash
+gh pr create --title "feat: <要約>"   # 本文は対話またはテンプレートで個別に書く(--fill は使わない)
 ```
 
 `main` の履歴は直線(マージコミットなし)に保つ。`main` への force push・削除は禁止。
@@ -35,7 +53,7 @@ gh pr merge --squash
 
 | 設定 | 値 |
 |---|---|
-| マージ方法 | squash のみ(merge commit・rebase merge は無効) |
+| マージ方法 | rebase のみ(merge commit・squash は無効) |
 | マージ後のブランチ削除 | 有効 |
 | `main` の ruleset | PR 必須(承認数 0)・直線履歴・force push 禁止・削除禁止 |
 
