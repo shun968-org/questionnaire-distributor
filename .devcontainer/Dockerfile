@@ -11,6 +11,13 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     && apt-get update && apt-get install -y --no-install-recommends gh \
     && rm -rf /var/lib/apt/lists/*
 
+ARG LEFTHOOK_VERSION=2.2.2
+RUN asset="lefthook_${LEFTHOOK_VERSION}_Linux_$(uname -m)" \
+    && base="https://github.com/evilmartians/lefthook/releases/download/v${LEFTHOOK_VERSION}" \
+    && cd /tmp && curl -fsSLO "$base/$asset" \
+    && curl -fsSL "$base/lefthook_checksums.txt" | grep " $asset\$" | sha256sum -c \
+    && install -m 755 "$asset" /usr/local/bin/lefthook && rm "$asset"
+
 COPY managed-settings.json /etc/claude-code/managed-settings.json
 
 # vscode の sudo はファイアウォールの設定だけに絞る(外せないようにする)
