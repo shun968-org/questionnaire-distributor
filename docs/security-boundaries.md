@@ -122,7 +122,7 @@ sequenceDiagram
 
 | 用途 | ドメイン(サブドメインを含む) |
 |---|---|
-| Claude Code | `api.anthropic.com`・`statsig.anthropic.com`・`statsig.com`・`sentry.io`・`claude.ai` |
+| Claude Code | `api.anthropic.com`・`statsig.anthropic.com`・`statsig.com`・`sentry.io`・`claude.ai`・`claude.com` |
 | GitHub | `github.com`・`githubusercontent.com` |
 | npm | `registry.npmjs.org` |
 | Notion(ドキュメント用スキル) | `api.notion.com` |
