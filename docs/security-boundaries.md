@@ -159,8 +159,8 @@ compose 相当(ユーザー定義ネットワーク + PostgreSQL)と Docker の�
 | 確認内容 | 期待 | 結果 |
 |---|---|---|
 | `https://api.github.com`・`registry.npmjs.org`・`api.anthropic.com`・`raw.githubusercontent.com` | 通る | 通る |
-| `https://platform.claude.com`(Claude Code の起動・ログイン) | 通る | 未確認(#24 の修正後、作り直したコンテナで確認する) |
-| `https://claude.com` など、`platform.claude.com` 以外の `claude.com` のサブドメイン | 止まる | 未確認(同上) |
+| `https://platform.claude.com`(Claude Code の起動・ログイン) | 通る | 通る(2026-11-14 に確認) |
+| `https://claude.com` など、`platform.claude.com` 以外の `claude.com` のサブドメイン | 止まる | NXDOMAIN(2026-11-14 に確認) |
 | `https://example.com` | 止まる | 止まる |
 | IP を直接指定(`https://1.1.1.1`) | 止まる | 止まる |
 | 許可外ドメインの名前解決 | 止まる | NXDOMAIN |
