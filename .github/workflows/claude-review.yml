@@ -1,0 +1,29 @@
+name: claude-review
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  review:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            Skill ツールで code-review を引数 `low ${{ github.event.pull_request.number }}` で実行する。
+            得られた指摘を 1 件ずつ mcp__github_inline_comment__create_inline_comment(confirmed: true)で該当ファイル・行にコメントする。本文は日本語で、1 行目を `**<30 字以内の見出し>**` とし、2 行目以降に何が問題か・どう起きるかを書く。
+            指摘が 0 件なら `gh pr comment ${{ github.event.pull_request.number }} --body "Claude レビュー: 指摘なし"` を実行する。
+            それ以外の投稿はしない。
+          claude_args: |
+            --allowedTools "Read,Grep,Glob,Skill,mcp__github_inline_comment__create_inline_comment,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(gh api:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*)"
