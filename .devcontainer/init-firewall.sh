@@ -9,6 +9,7 @@ ALLOWED_DOMAINS=(
   statsig.com
   sentry.io
   claude.ai
+  claude.com
   github.com
   githubusercontent.com
   registry.npmjs.org
