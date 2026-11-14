@@ -20,37 +20,28 @@ gh issue develop 12 --base main --name feat/12-questionnaire-schedule --checkout
 
 ```
 <type>[(scope)]: <要約>
-
-Refs: #<issue番号>
 ```
 
 `type`: `feat` / `fix` / `docs` / `refactor` / `test` / `chore` / `ci`。scope は任意。要約は日本語で「〜を追加する」のように書く。
 
-トレーラーは `Refs:` のみ。`Co-Authored-By:`(AI ツールが付けるものを含む)は付けない。
-
-git hook は [lefthook](https://github.com/evilmartians/lefthook)(`lefthook.yml`)で登録する。Dev container では自動で入る。それ以外の環境では lefthook をインストールして `lefthook install` を実行する。
-
-| hook | 内容 |
-|---|---|
-| pre-commit | ブランチ名が `<種別>/<issue番号>-<内容>` でなければコミットを止める |
-| prepare-commit-msg | `-m` などでメッセージを指定しないとき、ステージした差分と issue から Claude Haiku がメッセージを下書きする(`claude` と `gh` にログインが必要。失敗したら下書きなし) |
-| commit-msg | ブランチ名の issue 番号を `Refs: #N` として付ける |
+Dev container 以外の環境では [lefthook](https://github.com/evilmartians/lefthook) をインストールして `lefthook install` を実行する。
 
 コミットはそのまま `main` に入るので、粒度と内容を整えてから PR を出す。
+
+Claude にコミットさせるときは `/creating-commit`(または「コミットして」)。
 
 ## PR とマージ
 
 1. PR を作る(テンプレートに沿って概要と確認内容を書く)。`Closes #番号` で Issue を紐付ける(必須)。タイトルは Conventional Commits 形式。
 2. GitHub の画面から **rebase マージ**する(squash・merge commit は無効)。コミットは粒度を変えずに `main` へ直線で並ぶ。
-3. マージ後のブランチは自動で削除される。
 
 ```sh
 gh pr create --title "feat: <要約>"   # 本文は対話またはテンプレートで個別に書く(--fill は使わない)
 ```
 
-### レビュー
+Issue の用意からブランチ作成・PR 作成までを Claude にさせるときは `/creating-prs`(または「PR を作って」)。
 
-PR を開くと GitHub Actions(`.github/workflows/claude-review.yml`)が Claude で `/code-review low --comment` を実行し、指摘をインラインコメントで付ける。認証はリポジトリの Secret `CLAUDE_CODE_OAUTH_TOKEN`(`claude setup-token` で発行)で、サブスクリプションの枠内で動く。fork からの PR では動かない。
+### レビュー指摘への対応
 
 指摘に対応するかは人が判断し、対応するものだけを Claude に任せる。
 
@@ -66,14 +57,12 @@ task fix PR=16 -- 2            # 今のブランチ以外の PR を指定する
 
 ## リポジトリ設定
 
-上記のルールは GitHub 側で強制している。設定は `scripts/setup-github-repo.sh` で反映する(要: リポジトリの admin 権限)。
+リポジトリを作り直したときや、マージ方法・`main` の保護の設定を戻すときは、次を実行する(要: リポジトリの admin 権限)。
 
-| 設定 | 値 |
-|---|---|
-| マージ方法 | rebase のみ(merge commit・squash は無効) |
-| マージ後のブランチ削除 | 有効 |
-| `main` の ruleset | PR 必須(承認数 0)・直線履歴・force push 禁止・削除禁止 |
+```sh
+scripts/setup-github-repo.sh
+```
 
 ## 設計判断の記録
 
-技術選定などの判断は `docs/adr/` に ADR として残す(`managing-adrs` skill 参照)。
+技術選定などの判断は `docs/adr/` に ADR として残す。Claude に書かせるときは `/managing-adrs`(または「ADR を書いて」)。
