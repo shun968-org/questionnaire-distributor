@@ -1,0 +1,22 @@
+version: '3'
+
+vars:
+  PR:
+    sh: gh pr view --json number -q .number 2>/dev/null || true
+
+tasks:
+  comments:
+    desc: 未解決のレビュー指摘を一覧する(例 task comments PR=16)
+    cmds:
+      - scripts/review-threads.sh {{.PR}}
+
+  fix:
+    desc: 指定したレビュー指摘に Claude が対応する(例 task fix -- 1 3 "3 は対応しない")
+    interactive: true
+    preconditions:
+      - sh: test -n "{{.PR}}"
+        msg: PR が見つからない。PR=<番号> で指定する
+    env:
+      ARGS: '{{.CLI_ARGS}}'
+    cmds:
+      - claude "/addressing-review-comments {{.PR}} $ARGS"
