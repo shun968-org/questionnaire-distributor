@@ -46,6 +46,19 @@ git config core.hooksPath .githooks
 gh pr create --title "feat: <要約>"   # 本文は対話またはテンプレートで個別に書く(--fill は使わない)
 ```
 
+### レビュー
+
+PR を開くと GitHub Actions(`.github/workflows/claude-review.yml`)が Claude で `/code-review low --comment` を実行し、指摘をインラインコメントで付ける。認証はリポジトリの Secret `CLAUDE_CODE_OAUTH_TOKEN`(`claude setup-token` で発行)で、サブスクリプションの枠内で動く。fork からの PR では動かない。
+
+指摘に対応するかは人が判断し、対応するものだけを Claude に任せる。
+
+```sh
+task comments                  # 未解決の指摘を一覧する(1 列目が PR 内の指摘番号)
+task fix -- 1 3                # 指定した指摘を修正・コミット・push し、返信して resolve する
+task fix -- 1 3 "3 は対応しない" # 補足の指示を付ける
+task fix PR=16 -- 2            # 今のブランチ以外の PR を指定する
+```
+
 `main` の履歴は直線(マージコミットなし)に保つ。`main` への force push・削除は禁止。
 作業ブランチを `main` に追従させるときは rebase し、自分のブランチへの `git push --force-with-lease` は可。
 
