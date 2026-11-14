@@ -122,11 +122,13 @@ sequenceDiagram
 
 | 用途 | ドメイン(サブドメインを含む) |
 |---|---|
-| Claude Code | `api.anthropic.com`・`statsig.anthropic.com`・`statsig.com`・`sentry.io`・`claude.ai`・`claude.com` |
+| Claude Code | `api.anthropic.com`・`statsig.anthropic.com`・`statsig.com`・`sentry.io`・`claude.ai`・`platform.claude.com` |
 | GitHub | `github.com`・`githubusercontent.com` |
 | npm | `registry.npmjs.org` |
 | Notion(ドキュメント用スキル) | `api.notion.com` |
 | VS Code | `marketplace.visualstudio.com`・`vscode.blob.core.windows.net`・`update.code.visualstudio.com` |
+
+`platform.claude.com` は、Claude Code の起動・ログインで接続するため許可する。`claude.com` 全体を許可すると、すべてのサブドメインに通るようになるので、必要なホストだけに絞る。
 
 `mcp-proxy.anthropic.com` は許可しない。claude.ai の MCP コネクタ(Slack・Gmail など)経由で外部サービスに送れてしまうため。
 
@@ -157,6 +159,8 @@ compose 相当(ユーザー定義ネットワーク + PostgreSQL)と Docker の�
 | 確認内容 | 期待 | 結果 |
 |---|---|---|
 | `https://api.github.com`・`registry.npmjs.org`・`api.anthropic.com`・`raw.githubusercontent.com` | 通る | 通る |
+| `https://platform.claude.com`(Claude Code の起動・ログイン) | 通る | 未確認(#24 の修正後、作り直したコンテナで確認する) |
+| `https://claude.com` など、`platform.claude.com` 以外の `claude.com` のサブドメイン | 止まる | 未確認(同上) |
 | `https://example.com` | 止まる | 止まる |
 | IP を直接指定(`https://1.1.1.1`) | 止まる | 止まる |
 | 許可外ドメインの名前解決 | 止まる | NXDOMAIN |
