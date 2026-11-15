@@ -48,9 +48,10 @@ ADR-0001 で、画面(`apps/web`)と API(`apps/api`)を TypeScript で 1 つの�
 
 - 良い面: 依存の依存を誤って import しなくなる。宣言していない依存の import は lint で検出できる。依存の install 時のスクリプトを許可したものだけに絞れる。
 - 受け入れた不利益: 依存を巻き上げる前提のツールは、追加の設定(`public-hoist-pattern` など)が要ることがある。依存を足すたびに、install 時のスクリプトの許可が要るかを判断する手間が増える。
-- 未解決の保留事項: なし。
+- 未解決の保留事項: Node のバージョンと、それを固定する方法(`engines`・`.node-version` など)は、`apps/` を作るときに決める。
 - 移行作業:
   - ルートに `package.json`(`packageManager` を含む)と `pnpm-workspace.yaml` を作る。
   - `apps/web` の `package.json` に `hono` を書き、`apps/api` の型は ADR-0003 のとおりファイルのパスで参照する。
+  - CI で `pnpm install --frozen-lockfile` を実行し、`package-lock.json`・`yarn.lock` が無いことを確かめる。npm・yarn で入れた変更は、これで止める。
   - 宣言していない依存の import を、lint(`import/no-extraneous-dependencies`)で検査する。
   - ADR-0002 の `prisma generate` を実行する手順を、ルートと `apps/api` の `package.json` のスクリプトに置く。
