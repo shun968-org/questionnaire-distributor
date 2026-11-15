@@ -5,7 +5,7 @@
 #   scripts/check-adr-rules.sh [--base REF]    作業ツリーの内容を比較元と比べる
 # 比較元の既定は main との分岐点。main に入った 採用・非推奨・置換済み の ADR を採用済みとして扱い、
 # ブランチで書いている途中の ADR(PR のレビュー指摘の反映など)は自由に直せる。
-# 採用済み ADR のタイトル・「コンテキスト」「決定」の誤字・リンクだけを直すときは、
+# 採用済み ADR のタイトル・「コンテキスト」「決定」・「結果」の既存の行の誤字・リンクだけを直すときは、
 # ADR_ALLOW_ADOPTED_EDIT=1 を付けて実行する。
 set -euo pipefail
 # shellcheck source-path=SCRIPTDIR source=lib/adr.sh
@@ -137,6 +137,15 @@ if ! git rev-parse -q --verify "$base^{commit}" >/dev/null; then
   exit
 fi
 
+# 採用済み ADR の書き換えを報告する。誤字・リンクの修正だけなら ADR_ALLOW_ADOPTED_EDIT=1 で通す
+adopted_edit() {
+  if [ "${ADR_ALLOW_ADOPTED_EDIT:-}" = 1 ]; then
+    echo "注意: $1: 採用済み ADR の書き換え($2)を、ADR_ALLOW_ADOPTED_EDIT=1 で通した" >&2
+  else
+    report "$1: 採用済み ADR の$2(誤字・リンクの修正だけなら ADR_ALLOW_ADOPTED_EDIT=1 を付けて実行する)"
+  fi
+}
+
 mapfile -t before < <(git ls-tree --name-only "$base" -- "$ADR_DIR/" \
   | while IFS= read -r f; do is_adr "$f" && echo "$f"; done)
 
@@ -169,11 +178,13 @@ for f in "${before[@]}"; do
 
   new="${body_by[$f]}"
   if [ "$(immutable_part <<<"$old")" != "$(immutable_part <<<"$new")" ]; then
-    if [ "${ADR_ALLOW_ADOPTED_EDIT:-}" = 1 ]; then
-      echo "注意: $f: 採用済み ADR のタイトル・日付・「コンテキスト」「決定」の変更を、ADR_ALLOW_ADOPTED_EDIT=1 で通した" >&2
-    else
-      report "$f: 採用済み ADR のタイトル・日付・「コンテキスト」「決定」は書き換えない。決定が変わったなら新しい ADR を起こす(誤字・リンクの修正だけなら ADR_ALLOW_ADOPTED_EDIT=1 を付けて実行する)"
-    fi
+    adopted_edit "$f" "タイトル・日付・「コンテキスト」「決定」は書き換えない。決定が変わったなら新しい ADR を起こす"
+  fi
+  # 「結果」は末尾への追記だけを認める
+  old_result="$(result_part <<<"$old")"
+  new_result="$(result_part <<<"$new")"
+  if [ "$new_result" != "$old_result" ] && [[ "$new_result" != "$old_result"$'\n'* ]]; then
+    adopted_edit "$f" "「結果」は末尾に追記するだけにし、既存の行を消したり書き換えたりしない"
   fi
 done
 
