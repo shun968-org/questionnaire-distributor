@@ -14,7 +14,13 @@ slug=${slug%.git}
 owner=${slug%%/*}
 repo=${slug#*/}
 
-old=$(sed -n 's/^GH_TOKEN=//p' "$env_file" 2>/dev/null | head -n 1)
+# 古いトークン(.env がなければ空)。CRLF の改行と前後の引用符は取り除く
+old=""
+if [ -f "$env_file" ]; then
+  old=$(sed -n 's/^GH_TOKEN=//p' "$env_file" | head -n 1 | tr -d '\r')
+  old=${old#[\"\']}
+  old=${old%[\"\']}
+fi
 
 # 1. 作成画面を事前入力した URL を出す(リポジトリの選択だけは画面で行う)
 name="${repo:0:30}-$(date +%Y%m%d)"
@@ -36,10 +42,11 @@ case "$new" in
 esac
 
 # 3. 新しいトークンでこのリポジトリと issue が読めるかを確かめる(トークンはコマンドラインに載せない)
+# 接続できなかったときは 000 を返す(set -e で黙って終わらないように)
 check() {
   curl -sS -o /dev/null -w '%{http_code}' \
     -H @<(printf 'Authorization: Bearer %s\n' "$new") \
-    -H 'Accept: application/vnd.github+json' "$api$1"
+    -H 'Accept: application/vnd.github+json' "$api$1" || true
 }
 for path in "/repos/$owner/$repo" "/repos/$owner/$repo/issues?per_page=1"; do
   code=$(check "$path")
@@ -55,8 +62,15 @@ if [ "$code" != 200 ]; then
   echo "新しいトークンの対象に $owner/$repo が入っていない(HTTP $code)。Resource owner とリポジトリの選択を確認する。中止する。" >&2
   exit 1
 fi
+# 一覧は新しいトークンで取る(認証なしでは非公開のリポジトリが見えず、検査から漏れる)
+if ! list=$(curl -fsS -H @<(printf 'Authorization: Bearer %s\n' "$new") \
+      -H 'Accept: application/vnd.github+json' "$api/orgs/$owner/repos?per_page=100") \
+    || ! names=$(jq -er 'if type == "array" then .[].name else error("not a list") end' <<< "$list"); then
+  echo "組織 $owner のリポジトリの一覧を取れず、対象の範囲を確かめられない。.env は変えずに中止する。" >&2
+  exit 1
+fi
 others=()
-for other in $(curl -sS -H 'Accept: application/vnd.github+json' "$api/orgs/$owner/repos?per_page=100" | jq -r '.[].name'); do
+for other in $names; do
   [ "$other" = "$repo" ] && continue
   if [ "$(check "/repos/$owner/$other/collaborators?per_page=1")" = 200 ]; then others+=("$other"); fi
 done
@@ -83,14 +97,14 @@ echo "4. .env の GH_TOKEN を置き換えた。"
 # 5. 古いトークンを無効にする(認証なしで値を送る API。取り消せない)
 if [ -n "$old" ] && [ "$old" != "$new" ]; then
   code=$(jq -n --arg t "$old" '{credentials: [$t]}' | curl -sS -o /dev/null -w '%{http_code}' \
-    -X POST -H 'Accept: application/vnd.github+json' --data-binary @- "$api/credentials/revoke")
+    -X POST -H 'Accept: application/vnd.github+json' --data-binary @- "$api/credentials/revoke") || code=000
   if [ "$code" = 202 ]; then
     echo "5. 古いトークンの無効化を依頼した(受け付け済み。完了すると GitHub から通知が届く)。"
   else
     echo "5. 古いトークンの無効化に失敗した(HTTP $code)。https://github.com/settings/personal-access-tokens で削除する。" >&2
   fi
 else
-  echo "5. .env に古いトークンがないので、無効化は省いた。"
+  echo "5. .env に古いトークンがない(または新しいトークンと同じ)ので、無効化は省いた。"
 fi
 
 echo "6. コンテナに反映するため、VS Code で「Dev Containers: Rebuild Container」を実行する。"
