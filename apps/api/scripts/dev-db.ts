@@ -1,8 +1,9 @@
 // 開発用の PostgreSQL をこのコンテナの中で起動する(データは apps/api/.pgdata)。Ctrl+C で止める。
 import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import EmbeddedPostgres from 'embedded-postgres';
 
-const databaseDir = new URL('../.pgdata', import.meta.url).pathname;
+const databaseDir = fileURLToPath(new URL('../.pgdata', import.meta.url));
 const initialized = existsSync(`${databaseDir}/PG_VERSION`);
 const pg = new EmbeddedPostgres({
   databaseDir,

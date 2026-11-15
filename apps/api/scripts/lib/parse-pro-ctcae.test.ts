@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { expect, test } from 'vitest';
 import { parseProCtcae, readPdfLines } from './parse-pro-ctcae.ts';
 
@@ -80,7 +81,7 @@ test('PDF の行から、症状・質問文・選択肢を読み取る(折り返
 });
 
 // PDF は git で管理しないので、手元にあるときだけ確かめる
-const pdf = new URL('../../../../docs/pro-ctcae_japanese.pdf', import.meta.url).pathname;
+const pdf = fileURLToPath(new URL('../../../../docs/pro-ctcae_japanese.pdf', import.meta.url));
 test.skipIf(!existsSync(pdf))('PRO-CTCAE 日本語版の PDF から、80 症状・124 問を読み取る', async () => {
   const symptoms = parseProCtcae(await readPdfLines(pdf));
   expect(symptoms.map((s) => s.no)).toEqual(Array.from({ length: 80 }, (_, i) => i + 1));
