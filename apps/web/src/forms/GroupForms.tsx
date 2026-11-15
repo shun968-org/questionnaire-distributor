@@ -25,7 +25,8 @@ type GroupFormProps = {
 
 export function GroupForm({ id, initial, plans, planLocked }: GroupFormProps) {
   const navigate = useNavigate();
-  const { submit, error } = useSubmit();
+  // 作成した後は、グループの画面へ移る(いまの一覧は読み込み直さない)。更新は、いまの画面を読み込み直す
+  const { submit, error } = useSubmit({ revalidate: id !== undefined });
   const { register, handleSubmit, formState } = useForm<GroupFormValues>({
     resolver: zodResolver(groupFormSchema),
     defaultValues: { name: initial.name, planId: initial.planId ?? '' },
