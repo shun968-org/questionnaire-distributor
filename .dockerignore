@@ -1,0 +1,15 @@
+# イメージに入れないもの。.gitignore とは別に書く(apps/api/data/ は git では管理しないが、イメージには入れる)
+.git
+.env
+.env.*
+**/node_modules
+**/dist
+**/.pgdata
+apps/api/src/db/generated
+# 参考として置いた資料(PRO-CTCAE 日本語版の PDF、レジメンの資料)は配布しない
+docs
+*.pdf
+*.zip
+.claude
+.devcontainer
+.github
