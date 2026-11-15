@@ -82,10 +82,16 @@ export function createGroupService({ uow, today, now }: Deps) {
       uow.run(ctx, async ({ groups }) => {
         const group = await findGroup(groups, id);
         if (group.confirmedAt) throw new ConflictError('患者を確定したグループには、患者を追加できない');
+        // 足りない分をまとめて作り、使われているものを 1 回のクエリで調べる。重なった分だけ作り直す
         const codes = new Set<string>();
         while (codes.size < count) {
-          const code = randomCode();
-          if (!(await groups.codeExists(code))) codes.add(code);
+          const candidates = new Set<string>();
+          while (codes.size + candidates.size < count) {
+            const code = randomCode();
+            if (!codes.has(code)) candidates.add(code);
+          }
+          const existing = await groups.findExistingCodes([...candidates]);
+          for (const code of candidates) if (!existing.has(code)) codes.add(code);
         }
         await groups.addPatients(id, [...codes]);
       }),

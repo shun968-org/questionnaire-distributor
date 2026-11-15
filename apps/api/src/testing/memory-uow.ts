@@ -112,7 +112,7 @@ export function createMemoryUnitOfWork(): UnitOfWork {
       confirm: async (id, at) => {
         groups.get(id)!.confirmedAt = at.toISOString();
       },
-      codeExists: async (code) => [...patients.values()].some((p) => p.code === code),
+      findExistingCodes: async (codes) => new Set([...patients.values()].map((p) => p.code).filter((code) => codes.includes(code))),
       addPatients: async (groupId, codes) => {
         for (const code of codes) {
           const id = crypto.randomUUID();

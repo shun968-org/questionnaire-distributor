@@ -36,7 +36,8 @@ export interface GroupRepository {
   create(input: GroupInput): Promise<Group>;
   update(id: string, input: GroupInput): Promise<Group | null>;
   confirm(id: string, at: Date): Promise<void>;
-  codeExists(code: string): Promise<boolean>;
+  /** 渡した患者 ID のうち、すでに使われているもの */
+  findExistingCodes(codes: string[]): Promise<Set<string>>;
   addPatients(groupId: string, codes: string[]): Promise<void>;
   findPatient(id: string): Promise<Patient | null>;
   updatePatient(id: string, patch: PatientPatch): Promise<void>;

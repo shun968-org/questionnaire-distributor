@@ -64,8 +64,9 @@ export function createGroupRepository(tx: Prisma.TransactionClient): GroupReposi
       await tx.patientGroup.update({ where: { id }, data: { confirmedAt: at } });
     },
 
-    async codeExists(code) {
-      return (await tx.patient.count({ where: { code } })) > 0;
+    async findExistingCodes(codes) {
+      const rows = await tx.patient.findMany({ where: { code: { in: codes } }, select: { code: true } });
+      return new Set(rows.map((r) => r.code));
     },
 
     async addPatients(groupId, codes) {
