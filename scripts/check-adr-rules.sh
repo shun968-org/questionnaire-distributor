@@ -159,6 +159,7 @@ mapfile -t before < <(git ls-tree --name-only "$base" -- "$ADR_DIR/" \
 declare -A in_current=()
 for f in "${current[@]}"; do in_current[$f]=1; done
 declare -A in_before=()
+declare -A removed_number=() # 削除・改名を報告した番号
 max=0
 
 for f in "${before[@]}"; do
@@ -168,6 +169,7 @@ for f in "${before[@]}"; do
 
   if [ -z "${in_current[$f]:-}" ]; then
     report "$f: ADR は削除・改名しない。不要になった決定はステータスを変える"
+    removed_number[$n]=1
     continue
   fi
 
@@ -215,6 +217,8 @@ for f in "${current[@]}"; do
   # 比較元より後に main へ入った ADR は、新しく足したものではない
   [ -n "${in_before[$f]:-}" ] || [ -n "${on_main[$f]:-}" ] && continue
   n="$(number_of "$f")"
+  # 改名は削除として報告済み
+  [ -n "${removed_number[$n]:-}" ] && continue
   ((10#$n > max)) \
     || report "$f: 新しい ADR の番号は、$max_hint $(printf '%04d' "$max") より大きくする(欠番は再利用しない)"
 done
