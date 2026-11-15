@@ -68,3 +68,5 @@ scripts/setup-github-repo.sh
 技術選定などの判断は `docs/adr/` に ADR として残す。Claude に書かせるときは `/managing-adrs`(または「ADR を書いて」)。
 
 ADR を含むコミットでは、pre-commit で書式(`scripts/check-adr-format.sh`)と運用規則(`scripts/check-adr-rules.sh`)を検査する。`ADR_ALLOW_ADOPTED_EDIT=1 git commit` は、採用済み ADR の書き換えの検査(タイトル・日付・「コンテキスト」「決定」と、「結果」の既存の行)をすべて警告に下げる。採用済み ADR の誤字・リンクだけを直すコミットに限って使い、ほかの変更と混ぜない。
+
+PR では CI(`.github/workflows/adr-check.yml`)が、PR を取り込んだ結果を最新の `main` と比べて同じ検査をする。採用済み ADR の誤字・リンクだけを直す PR には、ラベル `adr-allow-adopted-edit` を付けて書き換えの検査を警告に下げる。ADR の PR が同時に開いているときは、片方をマージしたらもう片方を `main` に rebase して検査をやり直す(番号の重なりを検出するため)。
