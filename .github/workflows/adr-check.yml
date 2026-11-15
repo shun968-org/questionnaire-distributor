@@ -1,0 +1,35 @@
+name: adr-check
+
+# ADR の書式と運用規則を、PR を取り込んだ結果と最新の main を比べて検査する。
+# pre-commit(lefthook)を --no-verify で回避したときや、ほかの PR が先に main へ入れた
+# ADR 番号との重なりを検出する。
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+    paths:
+      - docs/adr/**
+      - scripts/check-adr-*.sh
+      - scripts/lib/adr.sh
+      - .github/workflows/adr-check.yml
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    env:
+      # 採用済み ADR の誤字・リンクだけを直す PR は、ラベルを付けて書き換えの検査を警告に下げる
+      ADR_ALLOW_ADOPTED_EDIT: ${{ contains(github.event.pull_request.labels.*.name, 'adr-allow-adopted-edit') && '1' || '' }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # 比較元の origin/main を取得する
+          fetch-depth: 0
+
+      - name: 書式
+        run: scripts/check-adr-format.sh docs/adr/*.md
+
+      - name: 運用規則
+        if: ${{ !cancelled() }}
+        run: scripts/check-adr-rules.sh --base origin/main
