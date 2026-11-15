@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # 試用版のイメージを GitHub のコンテナレジストリ(GHCR)に置くための、トークンを 2 つ用意する(docs/trial-deploy.md の手順 1)。
-#   - 送信用(write:packages): ホストの docker を ghcr.io にログインさせるのに使う。ファイルには保存しない
+#   - 送信用(write:packages): ホストの docker を ghcr.io にログインさせるのに使う。docker が資格情報として保存する
+#     (資格情報の置き場が未設定の環境では、~/.docker/config.json に入る)。終わったら docker logout ghcr.io で消す
 #   - 読み取り用(read:packages だけ): Render に登録する。画面に出さず、クリップボードに入れる
 # トークン(classic)は API では作れないので、作成画面を事前入力した URL を出し、貼り付けたトークンの権限を確かめる。
 # トークンを画面やログに出さないため、AI エージェントではなく、ホスト(Dev container の外)の自分のターミナルで実行する。

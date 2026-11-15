@@ -90,4 +90,5 @@ gcloud run deploy questionnaire-trial --source . --region asia-northeast1 \
 ## 終わったら
 
 サービスを削除する(Render: サービスの Settings の一番下。Cloud Run: `gcloud run services delete questionnaire-trial --region asia-northeast1`)。
-GHCR のイメージ(GitHub の Packages)を削除し、作ったトークンを 2 つとも無効にする。合言葉は使い回さない。
+GHCR のイメージ(GitHub の Packages)を削除し、作ったトークンを 2 つとも無効にする。
+ホストで `docker logout ghcr.io` を実行し、docker が保存した送信用のトークンを消す(資格情報の置き場が未設定だと、`~/.docker/config.json` に残る)。合言葉は使い回さない。
