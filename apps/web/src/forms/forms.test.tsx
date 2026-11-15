@@ -183,7 +183,7 @@ test('ボード: 薬剤の行は、マスのクリックで投与日を切り替
   expect(JSON.parse(screen.getByTestId('drugs').textContent!)[0].days).toEqual([2, 3]);
 });
 
-test('治療計画: 周期を縮めて配信がはみ出すと、登録せずにエラーを出す。直すと登録できる', async () => {
+test('治療計画: 周期を縮めて配信がはみ出すと、登録せずにエラーを出す。範囲に収めると登録できる', async () => {
   const user = userEvent.setup();
   const create = vi.spyOn(api.plans, 'create').mockResolvedValue({} as never);
   inRouter(
@@ -197,7 +197,7 @@ test('治療計画: 周期を縮めて配信がはみ出すと、登録せずに
         cycleLengthDays: 21,
         cycleCount: 8,
         baselineDays: 7,
-        drugs: [],
+        drugs: [{ name: '薬', route: 'IV', days: [1, 16] }],
         rules: [{ questionnaireId: Q1, dayOffset: 14, windowDays: 3, cycleFrom: 1, cycleTo: null }],
       }}
     />,
@@ -209,11 +209,17 @@ test('治療計画: 周期を縮めて配信がはみ出すと、登録せずに
   expect(await screen.findByText(/1 コースの日数からはみ出している/)).toBeTruthy();
   expect(create).not.toHaveBeenCalled();
 
-  await user.clear(length);
-  await user.type(length, '21');
+  // ボードに、範囲の外に残っていることが出る。ボタンで、範囲に収める(配信は 14 日の中へ動き、16 日目の投与日は消える)
+  expect(screen.getByRole('alert').textContent).toContain('投与日 1 件、配信 1 件');
+  await user.click(screen.getByRole('button', { name: '範囲に収める' }));
+  expect(screen.queryByRole('alert')).toBeNull();
   await user.click(screen.getByRole('button', { name: '治療計画を登録する' }));
   await waitFor(() => expect(create).toHaveBeenCalled());
-  expect(create.mock.calls[0]![0]).toMatchObject({ cycleLengthDays: 21, rules: [{ dayOffset: 14, windowDays: 3 }] });
+  expect(create.mock.calls[0]![0]).toMatchObject({
+    cycleLengthDays: 14,
+    drugs: [{ days: [1] }],
+    rules: [{ dayOffset: 13, windowDays: 1 }],
+  });
 });
 
 test('ボード: 質問票の名前から、その質問票の編集画面へ移れる。保存していない変更があれば確かめる', async () => {

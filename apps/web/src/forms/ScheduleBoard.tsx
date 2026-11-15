@@ -61,6 +61,18 @@ export function ScheduleBoard(props: Props) {
 
   const replaceRule = (index: number, rule: DeliveryRule) => props.onRulesChange(rules.map((r, i) => (i === index ? fit(rule) : r)));
 
+  // 1 コースの日数やベースラインの日数を減らすと、範囲の外に投与日や配信が残る(表には出ず、保存もできない)。
+  // 入力の途中で消えないよう、自動では直さず、ボタンでまとめて収める
+  const isOutOfRange = (r: DeliveryRule) => (r.dayOffset < 0 ? r.dayOffset < -baseline || r.dayOffset + r.windowDays > 0 : r.dayOffset + r.windowDays > cycleLength);
+  const outOfRangeRules = rules.filter(isOutOfRange).length;
+  const outOfRangeDoses = drugs.reduce((n, d) => n + d.days.filter((day) => day > cycleLength).length, 0);
+  const fitAll = () => {
+    props.onDrugsChange(drugs.map((d) => ({ ...d, days: d.days.filter((day) => day <= cycleLength) })));
+    // ベースラインの日数が 0 なら、ベースラインの配信は置けないので外す。ほかは、範囲に収まるように動かす・縮める
+    props.onRulesChange(rules.filter((r) => !(r.dayOffset < 0 && baseline === 0)).map((r) => (isOutOfRange(r) ? fit(r) : r)));
+    setSelected(null);
+  };
+
   /** ベースラインの配信の既定: ベースライン期間の全体を、回答可能期間にする */
   const baselineRule = (questionnaireId: string): DeliveryRule => ({
     questionnaireId,
@@ -330,6 +342,16 @@ export function ScheduleBoard(props: Props) {
       </aside>
 
       <div className="board-main">
+        {(outOfRangeRules > 0 || outOfRangeDoses > 0) && (
+          <div className="out-of-range" role="alert">
+            <span>
+              1 コースの日数・ベースラインの日数の外に、投与日 {outOfRangeDoses} 件、配信 {outOfRangeRules} 件が残っている(表には出ない。このままでは保存できない)。
+            </span>
+            <button type="button" onClick={fitAll}>
+              範囲に収める
+            </button>
+          </div>
+        )}
         <h4>薬剤の投与日</h4>
         <div className="board-scroll" ref={drugScroll} onScroll={() => syncScroll(drugScroll, ruleScroll)}>
           {headRow('薬剤')}
