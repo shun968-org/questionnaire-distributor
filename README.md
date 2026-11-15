@@ -4,8 +4,8 @@
 管理画面と、その設定を PostgreSQL に読み書きする API からなる。
 
 > [!NOTE]
-> 最初の設定画面(質問票マスタ・治療計画の配信スケジュール・患者グループ)を実装している段階。いまあるのは API だけで、管理画面はまだない。
-> 患者が回答する画面、回答の閲覧・集計、配信の実行(ワーカー)もまだない。
+> 最初の設定画面(質問票マスタ・治療計画の配信スケジュール・患者グループ)を実装している段階。
+> 患者が回答する画面、回答の閲覧・集計、配信の実行(ワーカー)はまだない。
 
 ## 技術スタック
 
@@ -23,7 +23,7 @@
 | 管理画面 | React(ビルドは Vite) |
 | 管理画面のルータ | React Router |
 | 管理画面のフォーム | React Hook Form |
-| テスト | Vitest |
+| テスト | Vitest(管理画面は jsdom と Testing Library) |
 | 開発用の DB の起動 | embedded-postgres(コンテナの中で PostgreSQL を動かす) |
 
 ## 開発環境の導入
@@ -149,7 +149,7 @@ pnpm install
 pnpm --filter api db:dev        # 開発用の PostgreSQL を起動する(別のターミナルで動かしたままにする)
 pnpm --filter api db:migrate    # スキーマを DB に反映し、ORM のクライアントを生成する
 pnpm --filter api db:seed       # 初期データを入れる: PRO-CTCAE マスタ(下を参照)と、治療計画のサンプル
-pnpm --filter api dev           # API(:3000)を起動する
+pnpm dev                        # API(:3000)と管理画面(:5173)を起動する
 ```
 
 `db:migrate`・`db:generate` は、Prisma のエンジンを `binaries.prisma.sh` から取得する。Dev container のファイアウォールの
