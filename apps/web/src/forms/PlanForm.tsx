@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 import { api, type PlanInput, type QuestionnaireSummary } from '../api/client.ts';
 import { type PlanFormValues, planFormSchema } from '../schemas/plan.ts';
 import { ScheduleBoard } from './ScheduleBoard.tsx';
-import { Field, FieldError, useSubmit } from './shared.tsx';
+import { Field, FieldError, useSubmit, useUnsavedChangesGuard } from './shared.tsx';
 
 type Props = {
   id?: string;
@@ -20,10 +20,14 @@ export function PlanForm({ id, initial, questionnaires }: Props) {
     defaultValues: initial,
   });
   const { errors, isSubmitting } = formState;
+  const allowLeave = useUnsavedChangesGuard(formState.isDirty);
   const values = useWatch({ control });
 
   const onSubmit = handleSubmit(async (input) => {
-    if (await submit(() => (id ? api.plans.update(id, input) : api.plans.create(input)))) navigate('/plans');
+    if (await submit(() => (id ? api.plans.update(id, input) : api.plans.create(input)))) {
+      allowLeave();
+      navigate('/plans');
+    }
   });
 
   // 薬剤のエラー: 行ごとのもの(名前・投与日)と、配列そのもののもの(行の数の上限)
@@ -70,7 +74,6 @@ export function PlanForm({ id, initial, questionnaires }: Props) {
           cycleCount={values.cycleCount ?? 1}
           baselineDays={values.baselineDays ?? 0}
           questionnaires={questionnaires}
-          hasUnsavedChanges={formState.isDirty}
           drugs={(values.drugs ?? []) as PlanFormValues['drugs']}
           onDrugsChange={(drugs) => setValue('drugs', drugs, { shouldDirty: true, shouldValidate: formState.isSubmitted })}
           rules={(values.rules ?? []) as PlanFormValues['rules']}

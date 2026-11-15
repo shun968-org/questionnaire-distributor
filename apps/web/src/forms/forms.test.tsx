@@ -222,38 +222,31 @@ test('治療計画: 周期を縮めて配信がはみ出すと、登録せずに
   });
 });
 
-test('ボード: 質問票の名前から、その質問票の編集画面へ移れる。保存していない変更があれば確かめる', async () => {
+test('治療計画: 保存していない変更があると、どの遷移でも確かめる。保存した後は確かめない', async () => {
   const user = userEvent.setup();
+  vi.spyOn(api.plans, 'create').mockResolvedValue({} as never);
+  const initial = { name: '計画', disease: '', regimenName: '', templateKey: null, cycleLengthDays: 21, cycleCount: 8, baselineDays: 7, drugs: [], rules: [] };
   const router = createMemoryRouter([
-    { path: '/', element: <BoardWithDirty /> },
-    { path: '/questionnaires/:id', element: <p>質問票の編集画面</p> },
+    { path: '/', element: <PlanForm questionnaires={questionnaires} initial={initial} /> },
+    { path: '/questionnaires/:id', element: <p>質問票のプレビュー</p> },
+    { path: '/plans', element: <p>治療計画の一覧</p> },
   ]);
   render(<RouterProvider router={router} />);
   const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
-  await user.click(screen.getByRole('link', { name: '症状チェック' }));
-  expect(confirm).toHaveBeenCalled();
+
+  await user.type(screen.getByLabelText('治療計画の名前'), '(変更)');
+  await user.click(screen.getByRole('link', { name: '症状チェック' })); // ボードの質問票のリンク
+  expect(confirm).toHaveBeenCalledTimes(1);
   expect(router.state.location.pathname).toBe('/'); // 断ったので移らない
+  await user.click(screen.getByRole('button', { name: 'キャンセル' })); // キャンセルでも確かめる
+  expect(confirm).toHaveBeenCalledTimes(2);
+  expect(router.state.location.pathname).toBe('/');
 
-  confirm.mockReturnValue(true);
-  await user.click(screen.getByRole('link', { name: '症状チェック' }));
-  expect(router.state.location.pathname).toBe(`/questionnaires/${Q1}`);
+  // 保存した後の遷移では確かめない
+  await user.click(screen.getByRole('button', { name: '治療計画を登録する' }));
+  await waitFor(() => expect(router.state.location.pathname).toBe('/plans'));
+  expect(confirm).toHaveBeenCalledTimes(2);
 });
-
-function BoardWithDirty() {
-  return (
-    <ScheduleBoard
-      cycleLengthDays={21}
-      cycleCount={8}
-      baselineDays={7}
-      questionnaires={questionnaires}
-      drugs={[]}
-      onDrugsChange={() => {}}
-      rules={[]}
-      onRulesChange={() => {}}
-      hasUnsavedChanges
-    />
-  );
-}
 
 test('ボード: ベースラインは既定で付き、バーの印で外せる。外した後に配信を足しても、勝手には戻らない', async () => {
   const user = userEvent.setup();

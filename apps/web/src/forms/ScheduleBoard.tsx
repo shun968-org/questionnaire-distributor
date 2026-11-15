@@ -13,8 +13,6 @@ type Props = {
   onDrugsChange: (drugs: Drug[]) => void;
   rules: DeliveryRule[];
   onRulesChange: (rules: DeliveryRule[]) => void;
-  /** 保存していない変更があるか。あるときは、質問票のプレビューへ移る前に確かめる */
-  hasUnsavedChanges?: boolean;
 };
 
 const DAY_WIDTH = 34;
@@ -202,11 +200,6 @@ export function ScheduleBoard(props: Props) {
       to={`/questionnaires/${id}`}
       draggable={false}
       title="この質問票のプレビューを開く"
-      onClick={(e) => {
-        if (props.hasUnsavedChanges && !window.confirm('治療計画に、保存していない変更がある。破棄して、質問票のプレビューへ移るか?')) {
-          e.preventDefault();
-        }
-      }}
     >
       {nameOf(id)}
     </Link>

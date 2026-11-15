@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router';
 import { api, type ProCtcaeSymptom, type QuestionnaireInput } from '../api/client.ts';
 import { type QuestionnaireFormValues, questionnaireFormSchema } from '../schemas/questionnaire.ts';
 import { Icon } from './icons.tsx';
-import { Field, FieldError, useSubmit } from './shared.tsx';
+import { Field, FieldError, useSubmit, useUnsavedChangesGuard } from './shared.tsx';
 
 type Props = {
   /** 編集する質問票の ID。新規のときは undefined */
@@ -32,6 +32,7 @@ export function QuestionnaireForm({ id, initial, proCtcae }: Props) {
   });
   const sections = useFieldArray({ control, name: 'sections' });
   const { errors, isSubmitting } = formState;
+  const allowLeave = useUnsavedChangesGuard(formState.isDirty);
 
   const onSubmit = handleSubmit(async (values) => {
     // 保存したら、その質問票のプレビューへ戻る
@@ -39,7 +40,10 @@ export function QuestionnaireForm({ id, initial, proCtcae }: Props) {
     const ok = await submit(async () => {
       savedId = (id ? await api.questionnaires.update(id, values) : await api.questionnaires.create(values)).id;
     });
-    if (ok) navigate(`/questionnaires/${savedId}`);
+    if (ok) {
+      allowLeave();
+      navigate(`/questionnaires/${savedId}`);
+    }
   });
 
   /** 質問を別の章へ移す。toIndex を省くと、章の最後に入れる */

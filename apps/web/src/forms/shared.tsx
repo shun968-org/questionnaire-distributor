@@ -1,5 +1,5 @@
-import { type ReactNode, useState } from 'react';
-import { useRevalidator } from 'react-router';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { useBlocker, useRevalidator } from 'react-router';
 
 export function FieldError({ message }: { message?: string }) {
   return message ? <p className="error">{message}</p> : null;
@@ -40,4 +40,30 @@ export function useSubmit({ revalidate = true }: { revalidate?: boolean } = {}) 
     return true;
   };
   return { submit, error };
+}
+
+/**
+ * 保存していない変更があるときに、画面を離れる前に確かめる(メニュー・リンク・キャンセル・戻る、のどれでも)。
+ * 戻り値の関数を呼ぶと、確かめずに離れられる(保存した後の遷移の前に呼ぶ)
+ */
+export function useUnsavedChangesGuard(dirty: boolean) {
+  const allowed = useRef(false);
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) => dirty && !allowed.current && currentLocation.pathname !== nextLocation.pathname,
+  );
+  useEffect(() => {
+    if (blocker.state !== 'blocked') return;
+    if (window.confirm('保存していない変更がある。破棄して、この画面を離れるか?')) blocker.proceed();
+    else blocker.reset();
+  }, [blocker]);
+  // タブを閉じる・再読み込みするときは、ブラウザの確認を出す
+  useEffect(() => {
+    if (!dirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [dirty]);
+  return () => {
+    allowed.current = true;
+  };
 }
