@@ -30,18 +30,18 @@ ADR-0001 で、画面(`apps/web`)と API(`apps/api`)を TypeScript で 1 つの�
 判断の根拠:
 
 1. **依存の依存を import できない。** pnpm は各パッケージの `node_modules` に、その `package.json` に書いた依存だけを置き、依存の依存は置かない。ただし Node は親のディレクトリの `node_modules` も辿るので、ルートに置いた依存は apps から宣言なしで import できてしまう。この抜け道は lint で塞ぐ(規則)。
-2. **依存パッケージの install 時のスクリプトを、許可したものだけに絞れる。** pnpm は既定で依存のスクリプトを実行せず、許可したパッケージだけを実行する。
+2. **依存パッケージの install 時のスクリプトを、許可したものだけに絞れる。** pnpm 10 以降は、既定で依存のスクリプトを実行しない。この ADR で固定する pnpm 12 では、許可していない依存のスクリプトがあると install がエラー(`ERR_PNPM_IGNORED_BUILDS`)で止まるので、許可の漏れにも気づける。
 3. **追加の導入が要らない。** Dev container に既に入っており、取得先も許可済み。
 
 ### 規則
 
 | 対象 | 必須 | 禁止 |
 |---|---|---|
-| リポジトリのルート | `package.json` の `packageManager` に pnpm のバージョンを固定する。`pnpm-workspace.yaml` に `apps/*` を書く | ルートに アプリケーションのコードや依存を置く(開発用のツールは対象外) |
+| リポジトリのルート | `package.json` の `packageManager` に、pnpm の正確なバージョン(`pnpm@12.21.0`)を固定する。`pnpm-workspace.yaml` に `apps/*` を書く | ルートに アプリケーションのコードや依存を置く(開発用のツールは対象外) |
 | apps の import | import するパッケージを、その apps の `package.json` に書く。lint(`import/no-extraneous-dependencies`)で検査する | ルートの `package.json` にだけ書いたパッケージを、apps のコードから import する |
 | ロックファイル | `pnpm-lock.yaml` を Git で管理する。CI では `pnpm install --frozen-lockfile` で入れる | `package-lock.json`・`yarn.lock` を置く |
 | 依存の追加・実行 | 追加は `pnpm add`、実行は `pnpm --filter <パッケージ> <スクリプト>`・`pnpm exec`・`pnpm dlx` を使う | `npm install`・`yarn add` で依存を入れる。`npx` で実行する |
-| 依存の install 時のスクリプト | 実行が必要なもの(Prisma・esbuild など)だけを、`pnpm-workspace.yaml` で明示的に許可する | すべての依存のスクリプトを一括で許可する |
+| 依存の install 時のスクリプト | 実行が必要なもの(Prisma・esbuild など)だけを、`pnpm approve-builds <パッケージ>` で `pnpm-workspace.yaml` の `allowBuilds` に 1 つずつ許可する | `pnpm approve-builds --all` などで、まとめて許可する。pnpm 10 より前のバージョンを使う |
 | workspace 内の参照 | ほかの workspace のパッケージを依存に書くときは `workspace:` プロトコルを使う | 相対パスやバージョン番号で、ほかの workspace のパッケージを依存に書く |
 
 ## 結果
