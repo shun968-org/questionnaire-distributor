@@ -20,7 +20,8 @@ ADR_LEVELS=(システム アプリ レイヤ)
 # 「決定」に必ず置く小見出し
 ADR_DECISION_SECTIONS=(構成要素 依存の規則)
 # ADR に書かないライブラリ・ツールの名前の一覧
-ADR_BANNED_TERMS_FILE="$(dirname "${BASH_SOURCE[0]}")/adr-banned-terms.txt"
+# 絶対パスにする(source した側が cd しても読めるように)
+ADR_BANNED_TERMS_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/adr-banned-terms.txt"
 
 # 先頭の箇条書きの値を出す(例: adr_field 階層)。見出しより前の行だけを見る
 adr_field() { awk -v key="- $1: " '/^## / { exit } index($0, key) == 1 { print substr($0, length(key) + 1); exit }'; }
