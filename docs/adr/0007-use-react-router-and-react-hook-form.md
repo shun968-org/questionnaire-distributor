@@ -14,7 +14,6 @@ ADR-0003 で、管理画面(`apps/web`)を Vite と React の SPA にし、API �
 - 治療計画の編集では、カレンダーに質問票を置く・外すといった、標準の入力欄ではない部品で値を入力する。
 - 入力の検証には zod を使う(ADR-0004)。スキーマを API と共有するかは、ADR-0004 で別の ADR に回した。
 - 技術選定では、学習目的として、広く使われている技術を学べるかも判断の基準にする。
-- 2026-11-15 時点の npm の最新: `react-router` 8.5.1(React 19.2.7 以上が必要)、`react-hook-form` 7.92.0、`@hookform/resolvers` 7.0.6。
 - React Router には、使い方(モード)が 3 つある。宣言型(`<BrowserRouter>`)、データ(`createBrowserRouter` と `loader`)、フレームワーク(`@react-router/dev` の Vite プラグイン。旧 Remix)。
 
 ### 検討した選択肢
@@ -50,11 +49,11 @@ ADR-0003 で、管理画面(`apps/web`)を Vite と React の SPA にし、API �
 ## 結果
 
 - 良い面: 画面の遷移とデータの読み込み、フォームの状態と検証の作り方が、画面ごとに揃う。広く使われている作り方を学べる。
-- 受け入れた不利益: URL のクエリのパラメータは型で検査されないので、`loader` で zod のスキーマを使って検証する。`loader` の取得結果はキャッシュされないので、同じデータを複数の画面で使うと、そのたびに API を呼ぶ。React Router のメジャーバージョンの更新(7 → 8 は約 1 年 7 か月)に追従する手間がかかる。
+- 受け入れた不利益: URL のクエリのパラメータは型で検査されないので、`loader` で zod のスキーマを使って検証する。`loader` の取得結果はキャッシュされないので、同じデータを複数の画面で使うと、そのたびに API を呼ぶ。React Router のメジャーバージョンの更新に追従する手間がかかる。
 - 未解決の保留事項:
   - フォームの zod のスキーマを API の `schemas/` と共有するかは、ADR-0004 の保留事項のとおり別の ADR で決める。それまでは `apps/web` の中にフォーム用のスキーマを置く。
   - API のエラーのレスポンスの形は ADR-0004 の保留事項のとおり別の ADR で決める。`setError` に渡す変換は、その形が決まってから作る。
   - 取得結果のキャッシュ(TanStack Query などの導入)は、同じデータの再取得が問題になったときに決める。
 - 移行作業:
-  - `apps/web` に `react-router`・`react-hook-form`・`@hookform/resolvers`・`zod` を入れる(ADR-0005 のとおり `pnpm add` で、`apps/web` の `package.json` に書く)。`react` は `react-router` の要求する 19.2.7 以上にする。
+  - `apps/web` に `react-router`・`react-hook-form`・`@hookform/resolvers`・`zod` を入れる(ADR-0005 のとおり `pnpm add` で、`apps/web` の `package.json` に書く)。
   - `react-router` の宣言型のモードのコンポーネント(`BrowserRouter`・`Routes`)と `Form`、`@react-router/dev` の import を、lint(`no-restricted-imports`)で禁止する。
