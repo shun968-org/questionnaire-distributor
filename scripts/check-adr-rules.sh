@@ -5,7 +5,7 @@
 #   scripts/check-adr-rules.sh [--base REF]    作業ツリーの内容を比較元と比べる
 # 比較元の既定は main との分岐点。main に入った ADR だけを採用済みとして扱い、
 # ブランチで書いている途中の ADR(PR のレビュー指摘の反映など)は自由に直せる。
-# 採用済み ADR の「コンテキスト」「決定」の誤字・リンクだけを直すときは、
+# 採用済み ADR のタイトル・「コンテキスト」「決定」の誤字・リンクだけを直すときは、
 # ADR_ALLOW_ADOPTED_EDIT=1 を付けて実行する。
 set -euo pipefail
 # shellcheck source-path=SCRIPTDIR source=lib/adr.sh
@@ -62,12 +62,14 @@ current_content() {
 
 status_of() { sed -n 's/^- ステータス: //p' | head -1; }
 # 見出しはコードフェンスの外のものだけを区切りとして扱う
-# 採用後に書き換えてはいけない部分(「コンテキスト」から「結果」の直前まで)
+# 採用後に書き換えてはいけない部分(1 行目のタイトルから「結果」の直前まで)。
+# 冒頭のステータス(別の規則で検査する)と関連(後続の ADR を書き足す)の行は除く。
 immutable_part() {
   awk '/^```/ { in_fence = !in_fence }
     !in_fence && /^## 結果$/ { exit }
-    !in_fence && /^## コンテキスト$/ { p = 1 }
-    p'
+    !in_fence && /^## / { in_body = 1 }
+    !in_body && /^- (ステータス|関連):/ { next }
+    { print }'
 }
 result_part() {
   awk '/^```/ { in_fence = !in_fence }
@@ -157,9 +159,9 @@ for f in "${before[@]}"; do
   new="${body_by[$f]}"
   if [ "$(immutable_part <<<"$old")" != "$(immutable_part <<<"$new")" ]; then
     if [ "${ADR_ALLOW_ADOPTED_EDIT:-}" = 1 ]; then
-      echo "注意: $f: 採用済み ADR の「コンテキスト」「決定」の変更を、ADR_ALLOW_ADOPTED_EDIT=1 で通した" >&2
+      echo "注意: $f: 採用済み ADR のタイトル・「コンテキスト」「決定」の変更を、ADR_ALLOW_ADOPTED_EDIT=1 で通した" >&2
     else
-      report "$f: 採用済み ADR の「コンテキスト」「決定」は書き換えない。決定が変わったなら新しい ADR を起こす(誤字・リンクの修正だけなら ADR_ALLOW_ADOPTED_EDIT=1 を付けて実行する)"
+      report "$f: 採用済み ADR のタイトル・日付・「コンテキスト」「決定」は書き換えない。決定が変わったなら新しい ADR を起こす(誤字・リンクの修正だけなら ADR_ALLOW_ADOPTED_EDIT=1 を付けて実行する)"
     fi
   fi
 done
