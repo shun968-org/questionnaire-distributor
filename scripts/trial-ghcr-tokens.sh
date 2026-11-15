@@ -25,7 +25,7 @@ fi
 command -v curl >/dev/null || { echo "curl が要る。" >&2; exit 1; }
 
 # トークンで GitHub に問い合わせ、応答のヘッダと本文を返す(トークンはコマンドラインに載せない)
-whoami() {
+fetch_user() {
   curl -sS -i -H @<(printf 'Authorization: Bearer %s\n' "$1") -H 'Accept: application/vnd.github+json' "$api/user" || true
 }
 
@@ -47,7 +47,7 @@ MSG
     ghp_*) ;;
     *) echo "classic のトークン(ghp_ で始まる)ではない。中止する。" >&2; exit 1 ;;
   esac
-  response=$(whoami "$token")
+  response=$(fetch_user "$token")
   if ! grep -qiE '^HTTP/[0-9.]+ 200' <<< "$response"; then
     echo "トークンで GitHub に入れない。貼り付けた値を確かめる。中止する。" >&2
     exit 1
@@ -77,7 +77,6 @@ if ! $read_only; then
     *) echo "write:packages の権限がない(今の権限: ${scopes:-なし})。中止する。" >&2; exit 1 ;;
   esac
   push_token=$token
-  owner=$(tr '[:upper:]' '[:lower:]' <<< "$login")
   echo "   $login のトークンで、権限は ${scopes} であることを確かめた。"
 
   # 2. ホストの docker を ghcr.io にログインさせる(トークンは docker の資格情報の置き場に入る)
