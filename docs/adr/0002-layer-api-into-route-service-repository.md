@@ -59,12 +59,12 @@ API(ADR-0001)は CRUD が中心だが、配信日の計算や 2 次治療への�
 
 ### 依存の規則
 
-表にない依存は禁止する。
+表にない依存は禁止する。引数で受け取った値を、型を書かずに次へ渡すだけなら、import は要らない(起動は、db で作った Unit of Work を組み立てに渡すが、ports を import しない)。
 
 | 構成要素 | import してよいもの(アプリ内) | import してよいもの(外部) |
 |---|---|---|
 | 起動 | 組み立て・db | HTTP のサーバ |
-| 組み立て | route・service・ports・業務エラー | HTTP のフレームワーク |
+| 組み立て | route・service・ports・業務エラー | HTTP のフレームワーク、HTTP のサーバ(静的なファイルの配信だけ、ADR-0001) |
 | route | service(引数で受け取る service の型だけ)・ports(`RequestContext` の型だけ)・API のスキーマ・ドメインのスキーマ・業務エラー | HTTP のフレームワーク |
 | service | ports・ドメインのスキーマ・業務エラー | なし |
 | ports | ドメインのスキーマ | なし |
