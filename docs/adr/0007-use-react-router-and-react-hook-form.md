@@ -56,4 +56,5 @@ ADR-0003 で、管理画面(`apps/web`)を Vite と React の SPA にし、API �
   - 取得結果のキャッシュ(TanStack Query などの導入)は、同じデータの再取得が問題になったときに決める。
 - 移行作業:
   - `apps/web` に `react-router`・`react-hook-form`・`@hookform/resolvers`・`zod` を入れる(ADR-0005 のとおり `pnpm add` で、`apps/web` の `package.json` に書く)。
-  - `react-router` の宣言型のモードのコンポーネント(`BrowserRouter`・`Routes`)と `Form`、`@react-router/dev` の import を、lint(`no-restricted-imports`)で禁止する。
+  - 規則で禁止したものの import を、lint(`no-restricted-imports`)で禁止する。対象は、`react-router` の宣言型のモードのコンポーネント(`BrowserRouter`・`Routes`)、`action` による送信に使うもの(`Form`・`useSubmit`・`useFetcher`・`useActionData`)、`@react-router/dev`、ほかのルータのライブラリ。
+  - import で検出できないもの(ルートへの `action` の定義、`useEffect` でのデータの取得)は、PR のレビューで確かめる。
