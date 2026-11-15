@@ -29,7 +29,7 @@ ADR-0001 で、画面(`apps/web`)と API(`apps/api`)を TypeScript で 1 つの�
 
 判断の根拠:
 
-1. **宣言していない依存を import できない。** pnpm は各パッケージの `node_modules` に、`package.json` に書いた依存だけを置く。ADR-0002・ADR-0003 の import の規則と、依存の宣言がずれない。
+1. **依存の依存を import できない。** pnpm は各パッケージの `node_modules` に、その `package.json` に書いた依存だけを置き、依存の依存は置かない。ただし Node は親のディレクトリの `node_modules` も辿るので、ルートに置いた依存は apps から宣言なしで import できてしまう。この抜け道は lint で塞ぐ(規則)。
 2. **依存パッケージの install 時のスクリプトを、許可したものだけに絞れる。** pnpm は既定で依存のスクリプトを実行せず、許可したパッケージだけを実行する。
 3. **追加の導入が要らない。** Dev container に既に入っており、取得先も許可済み。
 
@@ -38,6 +38,7 @@ ADR-0001 で、画面(`apps/web`)と API(`apps/api`)を TypeScript で 1 つの�
 | 対象 | 必須 | 禁止 |
 |---|---|---|
 | リポジトリのルート | `package.json` の `packageManager` に pnpm のバージョンを固定する。`pnpm-workspace.yaml` に `apps/*` を書く | ルートに アプリケーションのコードや依存を置く(開発用のツールは対象外) |
+| apps の import | import するパッケージを、その apps の `package.json` に書く。lint(`import/no-extraneous-dependencies`)で検査する | ルートの `package.json` にだけ書いたパッケージを、apps のコードから import する |
 | ロックファイル | `pnpm-lock.yaml` を Git で管理する。CI では `pnpm install --frozen-lockfile` で入れる | `package-lock.json`・`yarn.lock` を置く |
 | 依存の追加・実行 | 追加は `pnpm add`、実行は `pnpm --filter <パッケージ> <スクリプト>`・`pnpm exec`・`pnpm dlx` を使う | `npm install`・`yarn add` で依存を入れる。`npx` で実行する |
 | 依存の install 時のスクリプト | 実行が必要なもの(Prisma・esbuild など)だけを、`pnpm-workspace.yaml` で明示的に許可する | すべての依存のスクリプトを一括で許可する |
@@ -45,10 +46,11 @@ ADR-0001 で、画面(`apps/web`)と API(`apps/api`)を TypeScript で 1 つの�
 
 ## 結果
 
-- 良い面: 依存の宣言漏れが install の時点で表に出る。依存の install 時のスクリプトを許可したものだけに絞れる。
+- 良い面: 依存の依存を誤って import しなくなる。宣言していない依存の import は lint で検出できる。依存の install 時のスクリプトを許可したものだけに絞れる。
 - 受け入れた不利益: 依存を巻き上げる前提のツールは、追加の設定(`public-hoist-pattern` など)が要ることがある。依存を足すたびに、install 時のスクリプトの許可が要るかを判断する手間が増える。
 - 未解決の保留事項: なし。
 - 移行作業:
   - ルートに `package.json`(`packageManager` を含む)と `pnpm-workspace.yaml` を作る。
   - `apps/web` から `apps/api` の型を参照する方法(ADR-0003)を、`workspace:` プロトコルの依存として用意する。
+  - 宣言していない依存の import を、lint(`import/no-extraneous-dependencies`)で検査する。
   - ADR-0002 の `prisma generate` を実行する手順を、ルートと `apps/api` の `package.json` のスクリプトに置く。
