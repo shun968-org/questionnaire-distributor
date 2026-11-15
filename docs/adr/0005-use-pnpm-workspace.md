@@ -37,7 +37,7 @@ ADR-0001 で、画面(`apps/web`)と API(`apps/api`)を TypeScript で 1 つの�
 
 | 対象 | 必須 | 禁止 |
 |---|---|---|
-| リポジトリのルート | `package.json` の `packageManager` に、pnpm の正確なバージョン(`pnpm@12.21.0`)を固定する。`pnpm-workspace.yaml` に `apps/*` を書く | ルートに アプリケーションのコードや依存を置く(開発用のツールは対象外) |
+| リポジトリのルート | `package.json` の `packageManager` に、pnpm の正確なバージョン(`pnpm@12.21.0`)を固定する。`pnpm-workspace.yaml` に `apps/*` を書く。ルートの `devDependencies` には、リポジトリ全体で使う開発用のツール(TypeScript・ESLint など)だけを置く | ルートにアプリケーションのコードを置く。ルートの `dependencies` に依存を書く |
 | apps の import | import するパッケージを、その apps の `package.json` に書く。lint(`import/no-extraneous-dependencies`)で検査する | ルートの `package.json` にだけ書いたパッケージを、apps のコードから import する |
 | ロックファイル | `pnpm-lock.yaml` を Git で管理する。CI では `pnpm install --frozen-lockfile` で入れる | `package-lock.json`・`yarn.lock` を置く |
 | 依存の追加・実行 | 追加は `pnpm add`、実行は `pnpm --filter <パッケージ> <スクリプト>`・`pnpm exec`・`pnpm dlx` を使う | `npm install`・`yarn add` で依存を入れる。`npx` で実行する |
