@@ -6,6 +6,8 @@ scripts="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source-path=SCRIPTDIR source=../lib/adr.sh
 source "$scripts/lib/adr.sh"
 
+# ADR_DIR はリポジトリのルートからの相対パス
+cd "$(git rev-parse --show-toplevel)"
 [ -n "$(git diff --cached --name-only -- "$ADR_DIR/")" ] || exit 0
 
 # 両方の検査の結果をまとめて出す
