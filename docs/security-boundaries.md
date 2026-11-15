@@ -127,8 +127,11 @@ sequenceDiagram
 | Claude Code | `api.anthropic.com`・`statsig.anthropic.com`・`statsig.com`・`sentry.io`・`claude.ai`・`platform.claude.com` |
 | GitHub | `github.com`・`githubusercontent.com` |
 | npm | `registry.npmjs.org` |
+| ORM のエンジンの取得(クライアントの生成・マイグレーション) | `binaries.prisma.sh` |
 | Notion(ドキュメント用スキル) | `api.notion.com` |
 | VS Code | `marketplace.visualstudio.com`・`vscode.blob.core.windows.net`・`update.code.visualstudio.com` |
+
+ORM の CLI は、エンジンの取得のほかに、更新の確認で `checkpoint.prisma.io` に接続する。このホストは許可せず、`.devcontainer/devcontainer.json` の `CHECKPOINT_DISABLE=1` で、確認そのものを止める。
 
 `platform.claude.com` は、Claude Code の起動・ログインで接続するため許可する。`claude.com` 全体を許可すると、すべてのサブドメインに通るようになるので、必要なホストだけに絞る。
 
