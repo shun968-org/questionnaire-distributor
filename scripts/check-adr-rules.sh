@@ -8,6 +8,8 @@
 # 採用済み ADR のタイトル・「コンテキスト」「決定」・「結果」の既存の行の誤字・リンクだけを直すときは、
 # ADR_ALLOW_ADOPTED_EDIT=1 を付けて実行する。この変数は採用済み ADR の書き換えの検査をすべて警告に下げるので、
 # 誤字・リンクだけを直すコミットに限って使い、ほかの変更と混ぜない。
+# ADR の全体を作り直すとき(旧 ADR を削除して 0001 から書き直す)は、ADR_ALLOW_RESET=1 を付けて実行する。
+# 比較元と比べる検査(削除・改名、採用済み ADR の書き換え、番号)をすべて飛ばす。
 set -euo pipefail
 # shellcheck source-path=SCRIPTDIR source=lib/adr.sh
 source "$(dirname "${BASH_SOURCE[0]}")/lib/adr.sh"
@@ -134,7 +136,45 @@ for f in "${current[@]}"; do
   fi
 done
 
+# 階層と上位: システムの ADR は上位を持たない。それ以外は、より上の階層の ADR を上位に持つ
+level_rank() {
+  local i
+  for i in "${!ADR_LEVELS[@]}"; do
+    [ "${ADR_LEVELS[$i]}" = "$1" ] && echo "$i"
+  done
+  return 0
+}
+for f in "${current[@]}"; do
+  level="$(adr_field 階層 <<<"${body_by[$f]}")"
+  parent="$(adr_field 上位 <<<"${body_by[$f]}")"
+  rank="$(level_rank "$level")"
+  # 語彙にない値は check-adr-format.sh が検出する
+  [ -n "$rank" ] || continue
+  if [ "$rank" -eq 0 ]; then
+    [ "$parent" = なし ] || report "$f: 階層が ${ADR_LEVELS[0]} の ADR の上位は なし にする"
+    continue
+  fi
+  if [[ ! "$parent" =~ ^ADR-([0-9]{4})$ ]]; then
+    report "$f: 階層が $level の ADR は、上位に ADR-XXXX を書く(先に上位の階層の ADR を決める)"
+    continue
+  fi
+  parent_file="${file_of[${BASH_REMATCH[1]}]:-}"
+  if [ -z "$parent_file" ]; then
+    report "$f: 上位の $parent が $ADR_DIR/ に無い"
+    continue
+  fi
+  parent_rank="$(level_rank "$(adr_field 階層 <<<"${body_by[$parent_file]}")")"
+  [ -z "$parent_rank" ] || ((parent_rank < rank)) \
+    || report "$f: 上位の $parent は、この ADR より上の階層のものにする"
+done
+
 # --- 比較元と比べて判断する規則 ---
+if [ "${ADR_ALLOW_RESET:-}" = 1 ]; then
+  msg="ADR_ALLOW_RESET=1 のため、比較元と比べる検査(削除・改名、採用済み ADR の書き換え、番号)を飛ばした"
+  if [ "${GITHUB_ACTIONS:-}" = true ]; then echo "::warning::$msg"; else echo "注意: $msg" >&2; fi
+  [ "$violations" -eq 0 ]
+  exit
+fi
 if ! git rev-parse -q --verify "$base^{commit}" >/dev/null; then
   if $base_given; then
     echo "比較元 '$base' が見つからない" >&2

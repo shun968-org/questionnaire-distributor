@@ -1,0 +1,23 @@
+# ADR に書かないライブラリ・ツールの名前(1 行に 1 つ。大文字と小文字は区別しない)。
+# ADR には「ORM」「HTTP のフレームワーク」のように役割で書き、採用したものは README の技術スタックの表に書く。
+# 依存を足したとき、検討して採らなかったものを含めて、ここに名前を足す。
+Hono
+Prisma
+React
+Vite
+zod
+pnpm
+npm
+Yarn
+Bun
+Node
+Node.js
+Next.js
+Remix
+Express
+Drizzle
+Kysely
+TanStack
+wouter
+PostgreSQL
+TypeScript
