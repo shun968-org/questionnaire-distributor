@@ -64,9 +64,17 @@ task fix PR=16 -- 2            # 今のブランチ以外の PR を指定する
 scripts/setup-github-repo.sh
 ```
 
+## 開発環境と依存の扱い
+
+ADR に書かない、ツールの運用と実装上の決まり。
+
+- **Node のバージョン**: ルートの `.nvmrc` だけに書き、ほかのファイル(`engines.node` など)には書かない。Dev container と CI の Node は `.nvmrc` に合わせる(CI は `actions/setup-node` の `node-version-file: .nvmrc`)。`scripts/check-node-version.sh` が、動いている Node と Dev container の設定のメジャーバージョンを `.nvmrc` と比べる(コンテナの起動時に警告する)。
+- **pnpm**: バージョンはルートの `package.json` の `packageManager` で固定する。依存の追加は `pnpm add`、実行は `pnpm --filter`・`pnpm exec`・`pnpm dlx` を使い、`npm install`・`yarn add`・`npx` は使わない。`pnpm-lock.yaml` をコミットし、CI では `pnpm install --frozen-lockfile` で入れる。依存の install 時のスクリプトは、要るものだけを `pnpm approve-builds <パッケージ>` で 1 つずつ許可する。
+- **管理画面の秘密情報**: `VITE_` で始まる環境変数はビルド結果に埋め込まれるので、公開してよい値だけを入れる。localStorage・sessionStorage には表示の設定だけを置き、トークン・患者の ID・配信スケジュールのデータは置かない。
+
 ## 設計判断の記録
 
-技術選定などの判断は `docs/adr/` に ADR として残す。Claude に書かせるときは `/managing-adrs`(または「ADR を書いて」)。
+技術選定などの判断は `docs/adr/` に ADR として残す。ADR に書くのは、構造やレイヤ間の接続方法など、アーキテクチャに関係するものだけにする。バージョンとその選択、ツールの設定や運用の細目は書かない(書き始めると切りがなく、採用後に直せない ADR にすぐ古くなる記述が残るため)。Claude に書かせるときは `/managing-adrs`(または「ADR を書いて」)。
 
 ADR を含むコミットでは、pre-commit で書式(`scripts/check-adr-format.sh`)と運用規則(`scripts/check-adr-rules.sh`)を検査する。`ADR_ALLOW_ADOPTED_EDIT=1 git commit` は、採用済み ADR の書き換えの検査(タイトル・日付・「コンテキスト」「決定」と、「結果」の既存の行)をすべて警告に下げる。採用済み ADR の誤字・リンクだけを直すコミットに限って使い、ほかの変更と混ぜない。
 
