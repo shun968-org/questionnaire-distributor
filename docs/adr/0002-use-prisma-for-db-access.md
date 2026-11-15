@@ -2,7 +2,7 @@
 
 - ステータス: 採用
 - 日付: 2026-11-14
-- 関連: ADR-0001
+- 関連: ADR-0001、ADR-0004
 
 ## コンテキスト
 
@@ -65,5 +65,4 @@ Prisma 7 では、Client は `prisma-client` ジェネレーターで指定し�
   - `binaries.prisma.sh` を許可ドメインとして `.devcontainer/init-firewall.sh` に追加する(PR で確認する)。
   - Prisma Client を import してよい場所を、lint(`no-restricted-imports`)で検査する。型だけの import も検査の対象にする。
   - 生の SQL のメソッドの使用を、lint(`no-restricted-syntax`)で検査する。`apps/api/src/db/` の `set_config` を実行する箇所だけ、検査から除外する。
-- 追記(2026-11-14、ADR-0004):
-  - RLS の `set_config` は、ADR-0004 の Unit of Work(`db/unit-of-work.ts`)の `run` の最初に 1 回実行する。「受け入れた不利益」に書いた、`$extends` で全クエリに `set_config` を差し込む方式は採らない。
+- 追記(2026-11-14): RLS の `set_config` の実行場所において、`$extends` で全クエリに差し込む仕組みが複雑になる懸念のため、`$extends` で差し込む方式と ADR-0004 の Unit of Work の `run` の最初に実行する方式のうち、後者を採る。`set_config(..., true)` を `run` の最初に 1 回実行するだけで済む効果を得るため、読み取りだけの処理もトランザクションになる不利益を許容する。
