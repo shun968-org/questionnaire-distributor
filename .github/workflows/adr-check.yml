@@ -39,8 +39,13 @@ jobs:
           git -c user.name=adr-check -c user.email=adr-check@localhost merge --no-edit -q origin/main \
             || { echo "::error::最新の main と競合する。main に rebase して push する"; exit 1; }
 
+      # PR で触っていない ADR の書式で止まらないよう、PR で追加・変更した ADR だけを検査する
       - name: 書式
-        run: scripts/check-adr-format.sh docs/adr/*.md
+        run: |
+          mapfile -t files < <(git diff --name-only --diff-filter=ACMR origin/main...HEAD -- 'docs/adr/*.md')
+          if [ "${#files[@]}" -gt 0 ]; then
+            scripts/check-adr-format.sh "${files[@]}"
+          fi
 
       - name: 運用規則
         if: ${{ !cancelled() }}
