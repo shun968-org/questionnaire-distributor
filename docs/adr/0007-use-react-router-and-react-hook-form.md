@@ -2,7 +2,7 @@
 
 - ステータス: 採用
 - 日付: 2026-11-15
-- 関連: ADR-0003、ADR-0004、ADR-0005
+- 関連: ADR-0003、ADR-0004
 
 ## コンテキスト
 
@@ -40,22 +40,15 @@ ADR-0003 で、管理画面(`apps/web`)を Vite と React の SPA にし、API �
 
 | 対象 | 必須 | 禁止 |
 |---|---|---|
-| ルータ | `react-router` のデータのモードを使う。ルートは `createBrowserRouter` で定義し、`react-router/dom` の `RouterProvider` で描く | フレームワークのモード(`@react-router/dev`)、宣言型のモード(`<BrowserRouter>`・`<Routes>`)を使う。ほかのルータのライブラリを入れる |
-| 画面のデータの読み込み | 画面を開くときに要るデータは、ルートの `loader` で `hc` から API を呼んで取得する。`hc` は 4xx・5xx でも例外を投げないので、`loader` で `res.ok` を確かめ、失敗したら throw する | 画面を開くときのデータの取得を、コンポーネントの `useEffect` で行う。`res.ok` を確かめずに結果を返す |
-| 読み込み中とエラーの表示 | 一番上のルートに、最初の読み込み中に出す `HydrateFallback` と、`loader` のエラーを出す `errorElement` を置く。画面の移動中の表示は、共通のレイアウトで `useNavigation` の状態を見て出す | 読み込み中・エラーの表示を、画面ごとに別の仕組みで作る(画面に固有の表示が要るときは、そのルートに `errorElement` を足す) |
-| フォーム | `react-hook-form` の `useForm` で状態を持つ。検証は `@hookform/resolvers/zod` の `zodResolver` に zod のスキーマを渡して行う。標準の入力欄でない部品は `Controller`(または `useController`)でつなぐ | フォームの入力値を `useState` に写して管理する。`register` の `required`・`pattern` などの検証のオプションで、zod のスキーマと別に検証を書く |
-| フォームの送信 | `handleSubmit` の中で `hc` から API を呼び、`res.ok` を確かめる。成功したときだけ、フォームのリセットや画面の移動をし、`useRevalidator` か画面の移動で `loader` を再実行してデータを読み直す | React Router の `<Form>` と `action` で送信する(送信の経路が 2 つになるため)。`res.ok` を確かめずに、成功したときの処理に進む |
-| API のエラーの表示 | API が返した入力のエラーは、`setError` で該当する入力欄に表示する。入力欄に対応しないエラーは、`setError("root.server", ...)` でフォームの上部に表示する | API のエラーをフォームの外の状態で別に管理する |
+| ルータ | React Router のデータのモード(`createBrowserRouter`)でルートを定義する | フレームワークのモード・宣言型のモードを使う。ほかのルータのライブラリを入れる |
+| 画面と API の接続 | 画面を開くときに要るデータは、ルートの `loader` で `hc` から API を呼んで取得する。フォームの送信は、`handleSubmit` の中で `hc` から API を呼ぶ | 画面を開くときのデータを、コンポーネントの `useEffect` で取得する。React Router の `<Form>` と `action` で送信する(送信の経路が 2 つになるため) |
+| フォーム | React Hook Form で状態を持ち、`zodResolver` に zod のスキーマを渡して検証する | フォームの入力値を `useState` で別に管理する。zod のスキーマと別に検証を書く |
 
 ## 結果
 
 - 良い面: 画面の遷移とデータの読み込み、フォームの状態と検証の作り方が、画面ごとに揃う。広く使われている作り方を学べる。
-- 受け入れた不利益: URL のクエリのパラメータは型で検査されないので、`loader` で zod のスキーマを使って検証する。`loader` の取得結果はキャッシュされないので、同じデータを複数の画面で使うと、そのたびに API を呼ぶ。送信の後に読み直すと、変更したデータだけでなく、表示中のすべてのルートの `loader` が再実行される。負荷が問題になったら、ルートの `shouldRevalidate` で再実行を絞る。React Router のメジャーバージョンの更新に追従する手間がかかる。
+- 受け入れた不利益: URL のクエリのパラメータは型で検査されない。`loader` の取得結果はキャッシュされないので、同じデータを複数の画面で使うと、そのたびに API を呼ぶ。
 - 未解決の保留事項:
-  - フォームの zod のスキーマを API の `schemas/` と共有するかは、ADR-0004 の保留事項のとおり別の ADR で決める。それまでは `apps/web` の中にフォーム用のスキーマを置く。
-  - API のエラーのレスポンスの形は ADR-0004 の保留事項のとおり別の ADR で決める。`setError` で入力欄に表示する変換は、その形が決まってから作る。それまでは、失敗をすべて `root.server` に表示する。
+  - フォームの zod のスキーマを API の `schemas/` と共有するかは、ADR-0004 の保留事項のとおり別の ADR で決める。
   - 取得結果のキャッシュ(TanStack Query などの導入)は、同じデータの再取得が問題になったときに決める。
-- 移行作業:
-  - `apps/web` に `react-router`・`react-hook-form`・`@hookform/resolvers`・`zod` を入れる(ADR-0005 のとおり `pnpm add` で、`apps/web` の `package.json` に書く)。
-  - 規則で禁止したものの import を、lint(`no-restricted-imports`)で禁止する。対象は、`react-router` の宣言型のモードのコンポーネント(`BrowserRouter`・`Routes`)、`action` による送信に使うもの(`Form`・`useSubmit`・`useFetcher`・`useActionData`)、`@react-router/dev`、ほかのルータのライブラリ。
-  - import で検出できないもの(ルートへの `action` の定義、`useEffect` でのデータの取得)は、PR のレビューで確かめる。
+- 移行作業: `apps/web` に React Router と React Hook Form を入れ、規則で禁止したものの import を lint(`no-restricted-imports`)で検査する。
