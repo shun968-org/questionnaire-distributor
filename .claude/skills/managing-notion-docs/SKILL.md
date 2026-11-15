@@ -12,7 +12,7 @@ description: 要件定義書・基本設計書をNotion上で作成・更新す�
 
 - `ntn` コマンドが導入済み。
 - 認証は **内部インテグレーションのトークン(`NOTION_API_TOKEN`)** を使う。`ntn login`は権限範囲が広いため不許可。
-  - トークンはリポジトリ直下の `.env`(git 管理外)に置き、devcontainer が `runArgs` の `--env-file` で渡す。
+  - トークンはリポジトリ直下の `.env`(git 管理外)に置く。コンテナの `ntn` はラッパーで、実行するときだけ `.env` から読んで渡す。
 - 未認証エラー(`No auth token found`)や権限エラー(`object_not_found` / `restricted_resource`)が出たら処理を止め、
   ユーザーに「トークン未設定」または「対象ページがインテグレーションに共有されていない」ことを伝える。
   Claudeは認証情報を探し回らず、`ntn login` / `ntn auth token` も実行しない。

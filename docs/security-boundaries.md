@@ -66,11 +66,11 @@ flowchart LR
   end
   subgraph C["コンテナ"]
     W["/workspace"]
-    V["環境変数"]
+    V["/workspace/.env<br/>(環境変数にはしない)"]
     X["(存在しない)"]
   end
   R ==>|bind mount| W
-  E -->|--env-file| V
+  E -->|bind mount の中| V
   S -.-x X
 ```
 
@@ -194,13 +194,16 @@ compose 相当(ユーザー定義ネットワーク + PostgreSQL)と Docker の�
 | 対象 | 保存場所 | 作り直したとき |
 |---|---|---|
 | Claude Code | `/home/vscode/.claude`(名前付きボリューム `claude-code-config-${devcontainerId}`) | 残る。ログインし直すのは、ボリュームを消したときと、リポジトリのフォルダの場所を変えたとき(`devcontainerId` が変わる) |
-| `gh` | 環境変数 `GH_TOKEN`(`.env`) | 残る(ログインしない) |
-| git の push(HTTPS) | `gh auth setup-git` で `gh` を git の認証ヘルパーにする(`setup-git.sh`) | 作成時に自動で設定 |
+| `gh` | `.env` の `GH_TOKEN` でログインし、`~/.config/gh/hosts.yml` に保存する(`setup-gh.sh`) | 起動のたびに自動でログイン(ファイアウォールの後) |
+| git の push(HTTPS) | `gh auth setup-git` で `gh` を git の認証ヘルパーにする(`setup-gh.sh`) | 起動のたびに自動で設定 |
 | git の作者名・メール | `GIT_USER_NAME`・`GIT_USER_EMAIL`(`.env`) | 作成時に自動で設定(`setup-git.sh`) |
-| Notion | `NOTION_API_TOKEN`(`.env`) | 残る |
+| Notion | `.env` の `NOTION_API_TOKEN` を、`ntn` のラッパーが実行中だけ渡す(`ntn-wrapper.sh`) | 残る |
+
+`.env` はコンテナの環境変数にしない(`--env-file` を使わない)。Dev Containers は起動ログにコンテナの環境変数をすべて出すため、
+ログを共有するとトークンが漏れる(実際に 2 回漏れた)。値は使う時点で `read-env.sh` が `/workspace/.env` から読む。
 
 `GH_TOKEN` はこのリポジトリだけに絞った fine-grained token にする。エージェントから読めるので、漏れた場合の被害をこのリポジトリに限るため。
 
 `GH_TOKEN` の再発行(期限切れ・漏れたとき)は、自分のターミナルで `task rotate-gh-token` を実行する。
 権限を入力済みの作成画面の URL を出し、貼り付けたトークンで読めるかを確かめてから `.env` を置き換え、古いトークンを無効にする(`POST /credentials/revoke`)。
-トークンが会話やログに残らないよう、エージェントには実行させない。反映には Rebuild Container が要る。
+トークンが会話やログに残らないよう、エージェントには実行させない。コンテナ内で実行すれば `gh` もその場で新しいトークンに切り替わる。
