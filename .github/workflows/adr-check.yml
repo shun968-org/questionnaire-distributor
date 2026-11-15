@@ -27,6 +27,8 @@ jobs:
     env:
       # 採用済み ADR の誤字・リンクだけを直す PR は、ラベルを付けて書き換えの検査を警告に下げる
       ADR_ALLOW_ADOPTED_EDIT: ${{ contains(github.event.pull_request.labels.*.name, 'adr-allow-adopted-edit') && '1' || '' }}
+      # ADR の全体を作り直す PR は、ラベルを付けて main と比べる検査を飛ばす
+      ADR_ALLOW_RESET: ${{ contains(github.event.pull_request.labels.*.name, 'adr-allow-reset') && '1' || '' }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -36,7 +38,7 @@ jobs:
       - name: ADR に関係する変更があるか
         id: changes
         run: |
-          if git diff --quiet origin/main...HEAD -- docs/adr/ 'scripts/check-adr-*.sh' scripts/lib/adr.sh .github/workflows/adr-check.yml; then
+          if git diff --quiet origin/main...HEAD -- docs/adr/ 'scripts/check-adr-*.sh' 'scripts/lib/adr*' .github/workflows/adr-check.yml; then
             echo "ADR に関係する変更が無いので、検査を飛ばす"
             echo "adr=false" >> "$GITHUB_OUTPUT"
           else
