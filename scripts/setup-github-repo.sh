@@ -2,6 +2,10 @@
 
 set -euo pipefail
 
+# main の保護の必須のチェック: .github/workflows/adr-check.yml の adr-check(GitHub Actions のアプリ ID 15368)。
+# strict_required_status_checks_policy で、ブランチを最新の main にしてからでないとマージできない。
+# adr-check を出すワークフローが main に入る前に実行すると、どの PR もマージできなくなる。
+
 repo="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
 ruleset_name="protect-default-branch"
 
@@ -37,6 +41,16 @@ gh api -X "$method" "$path" --input - --silent <<JSON
         "require_last_push_approval": false,
         "required_review_thread_resolution": false,
         "allowed_merge_methods": ["rebase"]
+      }
+    },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": true,
+        "do_not_enforce_on_create": false,
+        "required_status_checks": [
+          { "context": "adr-check", "integration_id": 15368 }
+        ]
       }
     }
   ]
