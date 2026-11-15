@@ -13,7 +13,8 @@ ADR-0001 で API を Node 上で動かすと決め、ADR-0005 で Node のバー
 - 2026-11-15 時点の Node のサポート状況(nodejs/Release の `schedule.json`): 26 は Active LTS(2026-10-28 から、サポート終了 2029-04-30)、24 は Maintenance(サポート終了 2028-04-30)、27 は 2027-04 のリリース予定。
 - Dev container の Node は devcontainer feature(`ghcr.io/devcontainers/features/node:1`)の既定 `lts` で入れており、今は 26.13.1。次の LTS が出ると、コンテナを作り直したときに黙って上がる。Node のバージョンは nvm で管理されている。
 - Node の取得先 `nodejs.org` はファイアウォールで許可していない。
-- pnpm 12 は、`pnpm-workspace.yaml` の `engineStrict: true` で、`engines.node` に合わない Node での install をエラー(`ERR_PNPM_UNSUPPORTED_ENGINE`)で止める。`engineStrict` が無いと警告だけで通る。
+- pnpm 12 の `engineStrict: true` は、ルートの `engines.node` だけでなく依存パッケージの `engines` にも適用される。依存が `engines.node` に Node 26 を含まない範囲を書いているだけで、install が `ERR_PNPM_UNSUPPORTED_ENGINE` で止まる。`engineStrict` が無いと、ルートの `engines.node` に合わなくても警告だけで通る。
+- ルートの `package.json` の `preinstall` は、依存のスクリプトと違い許可なしで pnpm が実行し、失敗すると install が止まる。
 
 ### 検討した選択肢
 
@@ -21,6 +22,7 @@ ADR-0001 で API を Node 上で動かすと決め、ADR-0005 で Node のバー
 |---|---|
 | Node 24 | 既に Maintenance で、サポート終了が 26 より 1 年早い。Dev container の Node と食い違う |
 | パッチまで固定する(例: `26.13.1`) | Dev container と CI の両方を、パッチが出るたびに更新する手間がかかり、セキュリティ修正の取り込みが遅れる |
+| `engines.node` と pnpm の `engineStrict` で止める | 依存パッケージの `engines` にも適用され、こちらで制御できない理由で install が止まる |
 | `.node-version` を基準にする | Dev container の nvm が読まない |
 | pnpm に Node を入れさせる(`devEngines.runtime` など) | 取得先の `nodejs.org` を、ファイアウォールの許可に足す必要がある。Node の入れ方が Dev container の feature と 2 系統になる |
 
@@ -32,7 +34,7 @@ ADR-0001 で API を Node 上で動かすと決め、ADR-0005 で Node のバー
 
 1. **サポートが一番長い。** 26 は Active LTS で、2029-04-30 までサポートされる。
 2. **今の環境のまま使える。** Dev container に入っている Node と同じで、取得先の追加も要らない。
-3. **食い違いを install の時点で止められる。** `engines.node` と `engineStrict` で、違うメジャーバージョンでの install が失敗する。
+3. **食い違いを install の時点で止められる。** ルートの `preinstall` で `.nvmrc` と比べるので、違うメジャーバージョンでの install が失敗する。依存パッケージの `engines` には左右されない。
 
 ### 規則
 
@@ -41,7 +43,7 @@ ADR-0001 で API を Node 上で動かすと決め、ADR-0005 で Node のバー
 | 基準 | ルートの `.nvmrc` に `26` と書く | `.nvmrc` 以外にバージョンの基準を作る |
 | Dev container | `.devcontainer/devcontainer.json` の Node の feature に `"version": "26"` を書く。`.nvmrc` を変えるときは同じコミットで変える | feature の `version` を省く、または `lts` にする |
 | CI | `actions/setup-node` の `node-version-file: .nvmrc` で入れる | ワークフローに Node のバージョンを直接書く |
-| pnpm | ルートの `package.json` の `engines.node` に `>=26 <27` を書き、`pnpm-workspace.yaml` に `engineStrict: true` を書く | `engineStrict` を外す |
+| 検査 | ルートの `package.json` の `preinstall` で `scripts/check-node-version.sh` を実行し、動いている Node のメジャーバージョンが `.nvmrc` と違えば失敗させる | `preinstall` の検査を外す。`engines.node` と `engineStrict` で代用する |
 
 ## 結果
 
@@ -50,5 +52,5 @@ ADR-0001 で API を Node 上で動かすと決め、ADR-0005 で Node のバー
 - 未解決の保留事項: 次の LTS(28)へ上げる時期は、26 のサポート終了(2029-04-30)より前に、新しい ADR で決める。
 - 移行作業:
   - ルートに `.nvmrc` を作り、`devcontainer.json` の Node の feature に `"version": "26"` を書く。
-  - ルートの `package.json` に `engines.node`、`pnpm-workspace.yaml` に `engineStrict: true` を書く(ADR-0005 の移行作業と同時に行う)。
+  - `scripts/check-node-version.sh` を作り、ルートの `package.json` の `preinstall` から実行する(ADR-0005 の移行作業と同時に行う)。
   - Node を使う CI のジョブで、`actions/setup-node` の `node-version-file: .nvmrc` を使う。
