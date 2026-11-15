@@ -453,3 +453,25 @@ test('質問票: 質問は、つまみのドラッグで順番を変えられ、
   await waitFor(() => expect(create).toHaveBeenCalled());
   expect(create.mock.calls[0]![0].sections.map((s) => s.questions.map((q) => q.text))).toEqual([['C'], ['B', 'X', 'A']]);
 });
+
+test('ボード: 配信のない行は、ほかの質問票に配信を置いても、順が変わらない', async () => {
+  const user = userEvent.setup();
+  function NoBaseline() {
+    const [rules, setRules] = useState<DeliveryRule[]>([]);
+    return (
+      <ScheduleBoard cycleLengthDays={21} cycleCount={8} baselineDays={0} questionnaires={questionnaires} drugs={[]} onDrugsChange={() => {}} rules={rules} onRulesChange={setRules} />
+    );
+  }
+  const { container } = inRouter(<NoBaseline />);
+  // ベースラインがないので、追加しただけの行には配信がない
+  await user.selectOptions(screen.getByLabelText('質問票を追加'), Q1);
+  await user.selectOptions(screen.getByLabelText('質問票を追加'), Q2);
+  const names = () => [...container.querySelectorAll('.board-scroll')[1]!.querySelectorAll('.board-row a')].map((a) => a.textContent);
+  expect(names()).toEqual(['症状チェック', '簡易チェック']);
+  // 2 行目にだけ配信を描く
+  const row = container.querySelectorAll('.board-row .track.drawable')[1]!;
+  fireEvent.pointerDown(row, { button: 0, clientX: 34 * 2, pointerId: 1 });
+  fireEvent.pointerMove(row, { clientX: 34 * 4, pointerId: 1 });
+  fireEvent.pointerUp(row, { pointerId: 1 });
+  expect(names()).toEqual(['症状チェック', '簡易チェック']);
+});

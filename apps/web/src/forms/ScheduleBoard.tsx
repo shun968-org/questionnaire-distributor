@@ -44,9 +44,10 @@ export function ScheduleBoard(props: Props) {
 
   const [selected, setSelected] = useState<number | null>(null);
   const [dropDay, setDropDay] = useState<number | null>(null);
-  // 表に行を出す質問票。配信がなくなっても、取り消す(ゴミ箱)までは行を残す
-  const [addedIds, setAddedIds] = useState<string[]>([]);
-  const rowIds = [...new Set([...rules.map((r) => r.questionnaireId), ...addedIds])];
+  // 表に行を出す質問票と、その順。配信がなくなっても、取り消す(ゴミ箱)までは行を残す。
+  // 順は、配信の有無で変わらないよう、ここで持つ(最初は、配信の並びの順)
+  const [rowOrder, setRowOrder] = useState<string[]>(() => [...new Set(rules.map((r) => r.questionnaireId))]);
+  const rowIds = [...new Set([...rowOrder, ...rules.map((r) => r.questionnaireId)])];
   // トラックの空いたところをドラッグして、配信のバーを描いている途中の状態
   const [draw, setDraw] = useState<{ row: string; questionnaireId: string; start: number; end: number } | null>(null);
   const drag = useRef<{ index: number; mode: 'move' | 'resize'; startX: number; origin: DeliveryRule; moved: boolean } | null>(null);
@@ -74,7 +75,7 @@ export function ScheduleBoard(props: Props) {
     // 質問票を計画に初めて置くときは、ベースラインの配信も付ける(既定はベースラインあり。後から外せる)
     const isFirst = !rowIds.includes(questionnaireId);
     if (isFirst && baseline > 0 && dayOffset >= 0) added.push(baselineRule(questionnaireId));
-    if (isFirst) setAddedIds((ids) => [...ids, questionnaireId]);
+    if (isFirst) setRowOrder((ids) => [...ids, questionnaireId]);
     props.onRulesChange([...rules, ...added]);
     setSelected(rules.length);
   };
@@ -82,7 +83,7 @@ export function ScheduleBoard(props: Props) {
   /** 質問票を治療計画に追加する(表に行を足す)。既定で、ベースラインの配信を付ける */
   const addQuestionnaire = (questionnaireId: string) => {
     if (rowIds.includes(questionnaireId)) return;
-    setAddedIds((ids) => [...ids, questionnaireId]);
+    setRowOrder((ids) => [...ids, questionnaireId]);
     if (baseline > 0) props.onRulesChange([...rules, baselineRule(questionnaireId)]);
     setSelected(null);
   };
@@ -92,7 +93,7 @@ export function ScheduleBoard(props: Props) {
     const count = rules.filter((r) => r.questionnaireId === questionnaireId).length;
     if (!window.confirm(`「${nameOf(questionnaireId)}」を、この治療計画から取り消す(配信 ${count} 件をすべて外す)。よいか?`)) return;
     props.onRulesChange(rules.filter((r) => r.questionnaireId !== questionnaireId));
-    setAddedIds((ids) => ids.filter((id) => id !== questionnaireId));
+    setRowOrder((ids) => ids.filter((id) => id !== questionnaireId));
     setSelected(null);
   };
 
@@ -244,7 +245,7 @@ export function ScheduleBoard(props: Props) {
     }
     if (to < 0 || to >= rowIds.length || from === to) return;
     const order = move(rowIds, from, to);
-    setAddedIds(order);
+    setRowOrder(order);
     // 配信の並びも行の順に合わせる(保存した後も、行の順が変わらないように)
     props.onRulesChange(order.flatMap((id) => rules.filter((r) => r.questionnaireId === id)));
     setSelected(null);
