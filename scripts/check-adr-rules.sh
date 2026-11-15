@@ -61,9 +61,19 @@ current_content() {
 }
 
 status_of() { sed -n 's/^- ステータス: //p' | head -1; }
+# 見出しはコードフェンスの外のものだけを区切りとして扱う
 # 採用後に書き換えてはいけない部分(「コンテキスト」から「結果」の直前まで)
-immutable_part() { awk '/^## 結果$/ { exit } /^## コンテキスト$/ { p = 1 } p'; }
-result_part() { awk '/^## 結果$/ { p = 1; next } p'; }
+immutable_part() {
+  awk '/^```/ { in_fence = !in_fence }
+    !in_fence && /^## 結果$/ { exit }
+    !in_fence && /^## コンテキスト$/ { p = 1 }
+    p'
+}
+result_part() {
+  awk '/^```/ { in_fence = !in_fence }
+    !in_fence && /^## 結果$/ { p = 1; next }
+    p'
+}
 
 mapfile -t current < <(list_current)
 
@@ -90,7 +100,7 @@ for f in "${current[@]}"; do
 
   results="$(result_part <<<"$body")"
   for item in "${RESULT_ITEMS[@]}"; do
-    grep -qE "^- ${item}:" <<<"$results" \
+    adr_outside_fences <<<"$results" | grep -qE "^- ${item}:" \
       || report "$f: 「結果」に '- ${item}:' が無い(該当が無ければ 'なし。' と書く)"
   done
 done

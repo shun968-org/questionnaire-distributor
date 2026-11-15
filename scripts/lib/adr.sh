@@ -11,3 +11,6 @@ report() {
   echo "NG: $1" >&2
   violations=$((violations + 1))
 }
+
+# コードフェンス(```)の外の行だけを出す。フェンスの中の見出しや箇条書きを数えないために使う。
+adr_outside_fences() { awk '/^```/ { in_fence = !in_fence; next } !in_fence'; }
