@@ -2,6 +2,8 @@ pre-commit:
   jobs:
     - name: branch-name
       run: scripts/hooks/check-branch-name.sh
+    - name: adr
+      run: scripts/hooks/check-adr.sh
 
 prepare-commit-msg:
   jobs:
