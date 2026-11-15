@@ -8,8 +8,6 @@
 # 採用済み ADR のタイトル・「コンテキスト」「決定」・「結果」の既存の行の誤字・リンクだけを直すときは、
 # ADR_ALLOW_ADOPTED_EDIT=1 を付けて実行する。この変数は採用済み ADR の書き換えの検査をすべて警告に下げるので、
 # 誤字・リンクだけを直すコミットに限って使い、ほかの変更と混ぜない。
-# ADR の全体を作り直すとき(旧 ADR を削除して 0001 から書き直す)は、ADR_ALLOW_RESET=1 を付けて実行する。
-# 比較元と比べる検査(削除・改名、採用済み ADR の書き換え、番号)をすべて飛ばす。
 set -euo pipefail
 # shellcheck source-path=SCRIPTDIR source=lib/adr.sh
 source "$(dirname "${BASH_SOURCE[0]}")/lib/adr.sh"
@@ -169,12 +167,6 @@ for f in "${current[@]}"; do
 done
 
 # --- 比較元と比べて判断する規則 ---
-if [ "${ADR_ALLOW_RESET:-}" = 1 ]; then
-  msg="ADR_ALLOW_RESET=1 のため、比較元と比べる検査(削除・改名、採用済み ADR の書き換え、番号)を飛ばした"
-  if [ "${GITHUB_ACTIONS:-}" = true ]; then echo "::warning::$msg"; else echo "注意: $msg" >&2; fi
-  [ "$violations" -eq 0 ]
-  exit
-fi
 if ! git rev-parse -q --verify "$base^{commit}" >/dev/null; then
   if $base_given; then
     echo "比較元 '$base' が見つからない" >&2

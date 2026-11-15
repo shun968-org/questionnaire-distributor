@@ -83,5 +83,3 @@ ADR に書かない、ツールの運用と実装上の決まり。
 ADR を含むコミットでは、pre-commit で書式と書かないもの(`scripts/check-adr-format.sh`。ライブラリ・ツールの名前は `scripts/lib/adr-banned-terms.txt` の一覧と照らすので、依存を足したら一覧にも足す)と運用規則(`scripts/check-adr-rules.sh`)を検査する。`ADR_ALLOW_ADOPTED_EDIT=1 git commit` は、採用済み ADR の書き換えの検査(タイトル・日付・「コンテキスト」「決定」と、「結果」の既存の行)をすべて警告に下げる。採用済み ADR の誤字・リンクだけを直すコミットに限って使い、ほかの変更と混ぜない。
 
 PR では CI(`.github/workflows/adr-check.yml`)が、PR を取り込んだ結果を最新の `main` と比べて同じ検査をする。採用済み ADR の誤字・リンクだけを直す PR には、ラベル `adr-allow-adopted-edit` を付けて書き換えの検査を警告に下げる(通した書き換えは PR の画面に warning として出る)。ラベルは後の push にも効くので、その PR に別の変更を足すときはラベルを外す。adr-check は main の保護で必須のチェックにしており、ブランチを最新の `main` にしてからでないとマージできないので、ADR の PR が同時に開いていても、先にマージされた ADR との番号の重なりは更新後の検査で検出される。
-
-ADR の全体を作り直す(旧 ADR をすべて削除して `0001` から書き直す)ときだけ、`ADR_ALLOW_RESET=1 git commit` で、`main` と比べる検査(削除・改名、採用済み ADR の書き換え、番号)を飛ばす。PR にはラベル `adr-allow-reset` を付ける。
