@@ -1,7 +1,8 @@
 # 試用版のイメージ。DB を使わず、メモリ上のデータで動く(止めるとデータは消える)。
 # 作る前に、PRO-CTCAE マスタのデータファイルを書き出しておく: pnpm --filter api pro-ctcae:export
 # PRO-CTCAE 日本語版の PDF は入れない(.dockerignore で docs/ を除いている)。
-FROM node:26-slim
+# 1 段目: 依存を入れて、管理画面とサーバをビルドする(開発用の依存を含む。配るイメージには残さない)
+FROM node:26-slim AS build
 
 WORKDIR /app
 RUN npm install -g pnpm@12.21.0
@@ -20,11 +21,19 @@ RUN pnpm --filter web build
 # サーバは、起動を速くするため、1 つのファイルにまとめておく(小さいインスタンスでは、起動のたびに変換すると遅い)
 RUN pnpm --filter api build:trial
 
+# 2 段目: 配るイメージ。実行に要るもの(まとめたサーバ、管理画面のビルド結果、マスタのデータファイル)だけを入れる
+FROM node:26-slim
+
+WORKDIR /app
+COPY --from=build /app/apps/api/dist/trial.mjs apps/api/dist/trial.mjs
+COPY --from=build /app/apps/web/dist apps/web/dist
+COPY --from=build /app/apps/api/data/pro-ctcae-master.json apps/api/data/pro-ctcae-master.json
+
 ENV NODE_ENV=production
 ENV WEB_DIST=/app/apps/web/dist
 ENV PRO_CTCAE_MASTER_FILE=/app/apps/api/data/pro-ctcae-master.json
 ENV PORT=8080
 EXPOSE 8080
-# 実行時は pnpm を通さず、まとめたファイルを node で直接起動する(root 以外のユーザーで動かす)
+# まとめたファイルを node で直接起動する(root 以外のユーザーで動かす)
 USER node
 CMD ["node", "apps/api/dist/trial.mjs"]
