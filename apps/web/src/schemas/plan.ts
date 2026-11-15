@@ -24,7 +24,7 @@ export const planFormSchema = z
           days: z.array(z.number().int().min(1)),
         }),
       )
-      .max(30),
+      .max(30, '薬剤の行は 30 までにする'),
     rules: z
       .array(
         z.object({
@@ -35,7 +35,7 @@ export const planFormSchema = z
           cycleTo: z.number().int().min(1).nullable(),
         }),
       )
-      .max(200),
+      .max(200, '配信は 200 件までにする'),
   })
   .superRefine((plan, ctx) => {
     plan.drugs.forEach((drug, i) => {

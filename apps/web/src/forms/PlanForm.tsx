@@ -34,9 +34,12 @@ export function PlanForm({ id, initial, questionnaires }: Props) {
     }
   });
 
-  const drugErrors = Array.isArray(errors.drugs)
-    ? errors.drugs.flatMap((d) => [d?.name?.message, d?.days?.message]).filter((m): m is string => !!m)
-    : [];
+  // 薬剤のエラー: 行ごとのもの(名前・投与日)と、配列そのもののもの(行の数の上限)
+  const drugErrors = [
+    errors.drugs?.message,
+    errors.drugs?.root?.message,
+    ...(Array.isArray(errors.drugs) ? errors.drugs.flatMap((d) => [d?.name?.message, d?.days?.message]) : []),
+  ].filter((m): m is string => !!m);
 
   return (
     <form onSubmit={onSubmit} className="stack">
