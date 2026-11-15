@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/db/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// 質問票マスタ。治療計画の配信ルールから選ぶ。
+model Questionnaire {
+  id          String                 @id @default(uuid())
+  name        String
+  description String                 @default("")
+  /// 作成のもとにしたレジメンのテンプレートのキー(参考情報)
+  templateKey String?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  sections    QuestionnaireSection[]
+  rules       DeliveryRule[]
+}
+
+/// 章。1 章が回答画面の 1 ページになる。
+model QuestionnaireSection {
+  id              String        @id @default(uuid())
+  questionnaireId String
+  position        Int
+  title           String
+  questionnaire   Questionnaire @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
+  questions       Question[]
+
+  @@unique([questionnaireId, position])
+}
+
+enum QuestionSource {
+  PRO_CTCAE
+  CUSTOM
+}
+
+enum AnswerType {
+  SINGLE_CHOICE
+  MULTI_CHOICE
+  NUMBER
+  TEXT
+}
+
+model Question {
+  id         String               @id @default(uuid())
+  sectionId  String
+  position   Int
+  source     QuestionSource
+  /// PRO-CTCAE の項目のコード(症状と属性)。任意の質問では null
+  proCtcaeCode String?
+  text       String
+  answerType AnswerType
+  /// 選択肢(文字列の配列)。選択式以外では空
+  options    Json                 @default("[]")
+  required   Boolean              @default(true)
+  section    QuestionnaireSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@unique([sectionId, position])
+}
+
+/// 治療計画。患者グループに適用する。レジメンのテンプレートは初期値を入れるだけで、計画ごとに編集できる。
+model TreatmentPlan {
+  id              String         @id @default(uuid())
+  name            String
+  disease         String         @default("")
+  regimenName     String         @default("")
+  templateKey     String?
+  /// 1 コースの日数
+  cycleLengthDays Int
+  /// コースの数
+  cycleCount      Int
+  /// 治療開始前に質問できる期間(ベースライン)の日数
+  baselineDays    Int            @default(0)
+  /// 薬剤と投与日(表示用)。[{ name, route, days: number[] }]
+  drugs           Json           @default("[]")
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  rules           DeliveryRule[]
+  groups          PatientGroup[]
+}
+
+/// 配信ルール。コースの何日目にどの質問票を配信し、何日間回答できるか。
+model DeliveryRule {
+  id              String        @id @default(uuid())
+  planId          String
+  questionnaireId String
+  /// 計画の中での並び順(画面の表の行の順は、この順で最初に出てくる質問票の順)
+  position        Int           @default(0)
+  /// コースの 1 日目を 0 とした日数。負の値はベースライン(治療開始前)で、1 コース目の前に 1 回だけ配信する
+  dayOffset       Int
+  /// 回答可能期間の日数(配信日を含む)
+  windowDays      Int
+  /// 対象のコース(dayOffset が 0 以上のとき)。cycleTo が null なら最後のコースまで
+  cycleFrom       Int           @default(1)
+  cycleTo         Int?
+  plan            TreatmentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  questionnaire   Questionnaire @relation(fields: [questionnaireId], references: [id], onDelete: Restrict)
+
+  @@index([planId])
+}
+
+model PatientGroup {
+  id          String         @id @default(uuid())
+  name        String
+  planId      String?
+  /// 患者を確定した日時。確定した後は患者を追加できない
+  confirmedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  plan        TreatmentPlan? @relation(fields: [planId], references: [id], onDelete: Restrict)
+  patients    Patient[]
+}
+
+enum PatientStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+/// 患者。個人情報は持たず、発行した ID だけを持つ。
+model Patient {
+  id            String        @id @default(uuid())
+  groupId       String
+  /// 発行した患者 ID
+  code          String        @unique
+  /// 治療開始日(1 コース目の 1 日目)。患者ごとに違う
+  startDate     DateTime?     @db.Date
+  status        PatientStatus @default(ACTIVE)
+  /// 治療を中断した日。この日以降に始まる配信を停止する
+  suspendedOn   DateTime?     @db.Date
+  suspendReason String        @default("")
+  createdAt     DateTime      @default(now())
+  group         PatientGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+}
+
+/// PRO-CTCAE の症状のマスタ。PRO-CTCAE 日本語版の PDF から取り込む(db:import-pro-ctcae)。文言はソースに持たない。
+model ProCtcaeSymptom {
+  /// 症状の識別子(資料の Symptom Term から作る)
+  code      String            @id
+  /// 資料の項目番号
+  no        Int               @unique
+  /// 資料の Symptom Term(英語)
+  term      String
+  label     String
+  /// 項目に付いている、回答者への注意書き
+  note      String?
+  /// 症状選択の画面でまとめるための分類
+  category  String
+  items     ProCtcaeItem[]
+}
+
+/// PRO-CTCAE の質問(症状ごとの、頻度・程度・生活への支障など)
+model ProCtcaeItem {
+  /// 例 NAUSEA:FREQUENCY。質問票の Question.proCtcaeCode が指す
+  code        String          @id
+  symptomCode String
+  position    Int
+  text        String
+  /// 選択肢(文字列の配列)
+  options     Json
+  symptom     ProCtcaeSymptom @relation(fields: [symptomCode], references: [code], onDelete: Cascade)
+
+  @@unique([symptomCode, position])
+}
