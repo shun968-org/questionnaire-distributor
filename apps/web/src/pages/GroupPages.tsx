@@ -130,13 +130,15 @@ export function GroupDetailPage() {
                     <StartDateForm key={`${p.startDate}-${p.status}`} patient={p} />
                   </td>
                   <td>
-                    {!p.startDate
-                      ? '開始日が未設定'
-                      : schedule?.currentCycle
-                        ? `${schedule.currentCycle} コース目・${schedule.currentDay} 日目`
-                        : p.startDate > today
-                          ? `開始まで ${dayDiff(today, p.startDate)} 日`
-                          : '全コース終了'}
+                    {!plan
+                      ? '治療計画が未選択'
+                      : !p.startDate
+                        ? '開始日が未設定'
+                        : schedule?.currentCycle
+                          ? `${schedule.currentCycle} コース目・${schedule.currentDay} 日目`
+                          : p.startDate > today
+                            ? `開始まで ${dayDiff(today, p.startDate)} 日`
+                            : '全コースの期間が終了'}
                   </td>
                   <td>
                     {next ? (
