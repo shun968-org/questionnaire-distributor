@@ -127,6 +127,7 @@ sequenceDiagram
 | Claude Code | `api.anthropic.com`・`statsig.anthropic.com`・`statsig.com`・`sentry.io`・`claude.ai`・`platform.claude.com` |
 | GitHub | `github.com`・`githubusercontent.com` |
 | npm | `registry.npmjs.org` |
+| ORM のエンジンの取得(クライアントの生成・マイグレーション) | `binaries.prisma.sh` |
 | Notion(ドキュメント用スキル) | `api.notion.com` |
 | VS Code | `marketplace.visualstudio.com`・`vscode.blob.core.windows.net`・`update.code.visualstudio.com` |
 

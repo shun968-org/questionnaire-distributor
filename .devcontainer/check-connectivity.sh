@@ -14,6 +14,7 @@ REQUIRED_HOSTS=(
   api.github.com
   raw.githubusercontent.com
   registry.npmjs.org
+  binaries.prisma.sh
   api.notion.com
   marketplace.visualstudio.com
   vscode.blob.core.windows.net
