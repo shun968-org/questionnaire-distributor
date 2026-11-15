@@ -2,7 +2,7 @@
 
 - ステータス: 採用
 - 日付: 2026-11-15
-- 関連: ADR-0001、ADR-0002、ADR-0003
+- 関連: ADR-0001、ADR-0002、ADR-0003、ADR-0006
 
 ## コンテキスト
 
@@ -55,3 +55,4 @@ ADR-0001 で、画面(`apps/web`)と API(`apps/api`)を TypeScript で 1 つの�
   - CI で `pnpm install --frozen-lockfile` を実行し、`package-lock.json`・`yarn.lock` が無いことを確かめる。npm・yarn で入れた変更は、これで止める。
   - 宣言していない依存の import を、lint(`import/no-extraneous-dependencies`)で検査する。
   - ADR-0002 の `prisma generate` を実行する手順を、ルートと `apps/api` の `package.json` のスクリプトに置く。
+- 追記(2026-11-15): 「未解決の保留事項」の Node のバージョンと固定する方法は、ADR-0006 で Node 26 に決め、`.nvmrc` を基準にすることにした。
