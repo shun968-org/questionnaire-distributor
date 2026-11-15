@@ -1,6 +1,6 @@
 # ADR-0004: API を route・service・repository の 3 層に分け、トランザクションを Unit of Work で扱う
 
-- ステータス: 採用
+- ステータス: 置換済み（ADR-0011）
 - 日付: 2026-11-14
 - 関連: ADR-0001、ADR-0002、ADR-0003
 
