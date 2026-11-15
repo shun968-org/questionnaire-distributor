@@ -18,7 +18,6 @@
 | API の層構成 | route / service / repository | [ADR-0004](docs/adr/0004-layer-api-into-route-service-repository.md) |
 | パッケージ管理 | pnpm workspace | [ADR-0005](docs/adr/0005-use-pnpm-workspace.md) |
 | Node のバージョン | Node 26(`.nvmrc`) | [ADR-0006](docs/adr/0006-pin-node-26.md) |
-| 管理画面のルータ・フォーム | React Router・React Hook Form | [ADR-0007](docs/adr/0007-use-react-router-and-react-hook-form.md) |
 
 ## 開発環境の導入
 
