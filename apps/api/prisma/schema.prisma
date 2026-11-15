@@ -128,7 +128,7 @@ model Patient {
   /// 治療開始日(1 コース目の 1 日目)。患者ごとに違う
   startDate     DateTime?     @db.Date
   status        PatientStatus @default(ACTIVE)
-  /// 治療を中断した日。この日以降に始まる配信を停止する
+  /// 治療を中断した日。この日より後に始まる配信を停止する(この日に始まる配信は止めない)
   suspendedOn   DateTime?     @db.Date
   suspendReason String        @default("")
   createdAt     DateTime      @default(now())
