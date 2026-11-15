@@ -101,8 +101,34 @@ git config user.name
 
 ### Dev container を使わない場合
 
-[lefthook](https://github.com/evilmartians/lefthook) と [Task](https://taskfile.dev/) を入れ、Node は `.nvmrc` のバージョンにそろえたうえで、
-`lefthook install` を実行する。この場合、上記のファイアウォールなどの制限はかからないので、AI エージェントを動かすときは注意する。
+Dev container が自動で行うことを手で行う。この場合、上記のファイアウォールなどの制限はかからないので、AI エージェントを動かすときは注意する。
+
+1. 次のツールを入れる。
+
+   | ツール | 使うところ |
+   | --- | --- |
+   | git・bash・awk・sed・grep | Git hooks(ブランチ名・ADR の検査) |
+   | [lefthook](https://github.com/evilmartians/lefthook) | Git hooks の実行 |
+   | [GitHub CLI](https://cli.github.com/)(`gh`) | Issue・PR の操作、`task comments`、コミットメッセージの下書き |
+   | [Task](https://taskfile.dev/) | `task comments`・`task fix`・`task rotate-gh-token` |
+   | [Claude Code](https://docs.anthropic.com/ja/docs/claude-code)(`claude`) | コミットメッセージの下書き(無ければ下書きを省く)、`task fix` |
+   | curl・jq | `task rotate-gh-token` |
+   | Node(`.nvmrc` のバージョン) | アプリの開発(ADR-0006) |
+
+2. `gh` にログインし、`git push` の認証に使う。
+
+   ```sh
+   gh auth login
+   gh auth setup-git
+   ```
+
+3. git の作者を設定し、Git hooks を入れる。
+
+   ```sh
+   git config user.name "<名前>"
+   git config user.email "<GitHub の noreply アドレス>"
+   lefthook install
+   ```
 
 ### トークンの再発行
 
