@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router';
 import { api, type ProCtcaeSymptom, type QuestionnaireInput } from '../api/client.ts';
 import { type QuestionnaireFormValues, questionnaireFormSchema } from '../schemas/questionnaire.ts';
 import { Icon } from './icons.tsx';
-import { errorMessage, Field, FieldError } from './shared.tsx';
+import { Field, FieldError, useSubmit } from './shared.tsx';
 
 type Props = {
   /** 編集する質問票の ID。新規のときは undefined */
@@ -25,7 +25,7 @@ const symptomOf = (code: string | null) => code?.split(':')[0] ?? null;
 
 export function QuestionnaireForm({ id, initial, proCtcae }: Props) {
   const navigate = useNavigate();
-  const [submitError, setSubmitError] = useState('');
+  const { submit, error: submitError } = useSubmit({ revalidate: false });
   const { register, control, handleSubmit, getValues, setValue, formState } = useForm<QuestionnaireFormValues>({
     resolver: zodResolver(questionnaireFormSchema),
     defaultValues: initial,
@@ -34,14 +34,12 @@ export function QuestionnaireForm({ id, initial, proCtcae }: Props) {
   const { errors, isSubmitting } = formState;
 
   const onSubmit = handleSubmit(async (values) => {
-    setSubmitError('');
-    try {
-      // 保存したら、その質問票のプレビューへ戻る
-      const saved = id ? await api.questionnaires.update(id, values) : await api.questionnaires.create(values);
-      navigate(`/questionnaires/${saved.id}`);
-    } catch (e) {
-      setSubmitError(errorMessage(e));
-    }
+    // 保存したら、その質問票のプレビューへ戻る
+    let savedId = '';
+    const ok = await submit(async () => {
+      savedId = (id ? await api.questionnaires.update(id, values) : await api.questionnaires.create(values)).id;
+    });
+    if (ok) navigate(`/questionnaires/${savedId}`);
   });
 
   /** 質問を別の章へ移す。toIndex を省くと、章の最後に入れる */

@@ -1,11 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { api, type PlanInput, type QuestionnaireSummary } from '../api/client.ts';
 import { type PlanFormValues, planFormSchema } from '../schemas/plan.ts';
 import { ScheduleBoard } from './ScheduleBoard.tsx';
-import { errorMessage, Field, FieldError } from './shared.tsx';
+import { Field, FieldError, useSubmit } from './shared.tsx';
 
 type Props = {
   id?: string;
@@ -15,7 +14,7 @@ type Props = {
 
 export function PlanForm({ id, initial, questionnaires }: Props) {
   const navigate = useNavigate();
-  const [submitError, setSubmitError] = useState('');
+  const { submit, error: submitError } = useSubmit({ revalidate: false });
   const { register, control, handleSubmit, setValue, formState } = useForm<PlanFormValues>({
     resolver: zodResolver(planFormSchema),
     defaultValues: initial,
@@ -24,14 +23,7 @@ export function PlanForm({ id, initial, questionnaires }: Props) {
   const values = useWatch({ control });
 
   const onSubmit = handleSubmit(async (input) => {
-    setSubmitError('');
-    try {
-      if (id) await api.plans.update(id, input);
-      else await api.plans.create(input);
-      navigate('/plans');
-    } catch (e) {
-      setSubmitError(errorMessage(e));
-    }
+    if (await submit(() => (id ? api.plans.update(id, input) : api.plans.create(input)))) navigate('/plans');
   });
 
   // 薬剤のエラー: 行ごとのもの(名前・投与日)と、配列そのもののもの(行の数の上限)
