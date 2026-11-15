@@ -58,7 +58,7 @@ for f in "${files[@]}"; do
     escaped="$(sed 's/[][\\.^$*+?(){}|]/\\&/g' <<<"$term")"
     hit="$(grep -niE "(^|[^A-Za-z0-9_])${escaped}([^A-Za-z0-9_]|$)" <<<"$body" | head -1 | cut -d: -f1 || true)"
     [ -z "$hit" ] \
-      || report "$f:$hit: ライブラリ・ツールの名前 '$term' を書かない(役割で書く。例: ORM、HTTP のフレームワーク)"
+      || report "$f:$hit: ライブラリ・ツールの名前 '$term' を書かない(役割で書く。例: ORM、HTTP のフレームワーク。一般の語として使うときは、カタカナか別の語で書く)"
   done <"$ADR_BANNED_TERMS_FILE"
   hit="$(grep -nE '(^|[^0-9A-Za-z./-])v?[0-9]+\.[0-9]+' <<<"$body" | head -1 | cut -d: -f1 || true)"
   [ -z "$hit" ] \
