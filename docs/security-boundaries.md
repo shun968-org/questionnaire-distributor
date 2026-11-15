@@ -117,6 +117,8 @@ sequenceDiagram
 - コンテナの起動時(`postStartCommand`)に適用する。必要なコマンドはすべてイメージに入れてあり、
   作成時(`postCreateCommand`)は通信を伴う処理をしない。通信が要る処理(`npm install` など)を足すときは `postStartCommand` のファイアウォールの後に置く。
 - 許可ドメインの変更は `init-firewall.sh` を編集して rebuild する。**許可ドメインは持ち出し経路にもなるので、増やすときは PR で確認する。**
+- 適用の直後に `.devcontainer/check-connectivity.sh` が、ツールが接続するホストに届くことと、許可外のホスト(`example.com`)に届かないことを確かめる。
+  失敗すると `postStartCommand` がエラーで終わり、起動時のログに通らなかったホストが出る。ツールの接続先が増えたら、このスクリプトの `REQUIRED_HOSTS` にも足す。
 
 ### 許可ドメイン
 
@@ -169,6 +171,8 @@ compose 相当(ユーザー定義ネットワーク + PostgreSQL)と Docker の�
 | `sudo` で `init-firewall.sh` 以外を実行 | 止まる | 止まる |
 | コンテナを再起動した後の再設定(上の項目も再起動後に同じ結果) | 成功 | 成功 |
 | `claude`・`gh`・`ntn` がイメージに入っている | 使える | 使える |
+| 起動時の疎通の検査(`check-connectivity.sh`) | 起動ログに OK が出る | OK(VS Code から rebuild、2026-11-15 に確認) |
+| 疎通の検査で、通らないホストや届いてしまうホストがある | NG を表示して exit 1 | NG を表示して exit 1(ホストを足した一時コピーで、2026-11-15 に確認) |
 
 ## 残るリスクと運用ルール
 
