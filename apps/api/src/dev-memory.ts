@@ -5,6 +5,7 @@
 //   PORT            待ち受けるポート(既定 3000)
 //   WEB_DIST / PRO_CTCAE_MASTER_FILE  管理画面のビルド結果と、マスタのデータファイルの場所(1 つのファイルにまとめて配るとき)
 import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { basicAuth } from 'hono/basic-auth';
@@ -15,7 +16,7 @@ import { createSeedService } from './services/seed.ts';
 import { createMemoryUnitOfWork } from './testing/memory-uow.ts';
 
 const port = Number(process.env.PORT ?? 3000);
-const webDist = process.env.WEB_DIST ?? new URL('../../web/dist', import.meta.url).pathname;
+const webDist = process.env.WEB_DIST ?? fileURLToPath(new URL('../../web/dist', import.meta.url));
 const uow = createMemoryUnitOfWork();
 const { app } = createApp({ uow, webDist: existsSync(webDist) ? webDist : undefined });
 
@@ -41,6 +42,15 @@ const server = password
   ? new Hono().use(basicAuth({ username: process.env.TRIAL_USER ?? 'trial', password, realm: 'trial' })).route('/', app)
   : app;
 
-serve({ fetch: server.fetch, port }, () =>
+const listening = serve({ fetch: server.fetch, port }, () =>
   console.log(`起動した(メモリ上のデータ、合言葉${password ? 'あり' : 'なし'}): http://localhost:${port}`),
 );
+
+// コンテナの中では PID 1 で動くので、終了のシグナルを自分で処理する(処理しないと、強制終了まで止まらない)。
+// keep-alive の接続が残ると close が終わらないので、待つ時間に上限を付ける
+const shutdown = () => {
+  setTimeout(() => process.exit(0), 5_000).unref();
+  listening.close(() => process.exit(0));
+};
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
