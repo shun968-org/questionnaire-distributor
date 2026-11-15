@@ -148,7 +148,13 @@ fi
 # 採用済み ADR の書き換えを報告する。誤字・リンクの修正だけなら ADR_ALLOW_ADOPTED_EDIT=1 で通す
 adopted_edit() {
   if [ "${ADR_ALLOW_ADOPTED_EDIT:-}" = 1 ]; then
-    echo "注意: $1: 採用済み ADR の書き換え($2)を、ADR_ALLOW_ADOPTED_EDIT=1 で通した" >&2
+    local msg="採用済み ADR の書き換え($2)を、ADR_ALLOW_ADOPTED_EDIT=1 で通した"
+    if [ "${GITHUB_ACTIONS:-}" = true ]; then
+      # PR の画面に注釈として出し、見落とさないようにする
+      echo "::warning file=$1::$msg"
+    else
+      echo "注意: $1: $msg" >&2
+    fi
   else
     report "$1: 採用済み ADR の$2(誤字・リンクの修正だけなら ADR_ALLOW_ADOPTED_EDIT=1 を付けて実行する)"
   fi
