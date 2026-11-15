@@ -40,17 +40,16 @@ ADR-0001 で API を Node 上で動かすと決め、ADR-0005 で Node のバー
 
 | 対象 | 必須 | 禁止 |
 |---|---|---|
-| 基準 | ルートの `.nvmrc` に `26` と書く | `.nvmrc` 以外のファイルに Node のバージョンを書く(`engines.node` を含む。下の Dev container の例外を除く) |
-| Dev container | Node の feature は既定(`lts`)のままにする。検査で止まったら、そのときに feature の `version` を `.nvmrc` に合わせる | ― |
+| 基準 | ルートの `.nvmrc` に `26` と書く。ほかとずれたら `.nvmrc` を優先し、ほかを `.nvmrc` に合わせる | `.nvmrc` 以外のファイルに Node のバージョンを書く(`engines.node` を含む。下の Dev container の例外を除く) |
+| Dev container | Node の feature は既定(`lts`)のままにする。検査でずれが出たら、そのときに feature の `version` を `.nvmrc` に合わせる。起動時(`postStartCommand`)に `scripts/check-node-version.sh --warn` を実行する | feature の `version` に `.nvmrc` と違うバージョンを書く |
 | CI | `actions/setup-node` の `node-version-file: .nvmrc` で入れる | ワークフローに Node のバージョンを直接書く |
-| 検査 | ルートの `package.json` の `preinstall` で `scripts/check-node-version.sh` を実行し、動いている Node のメジャーバージョンが `.nvmrc` と違えば失敗させる | `preinstall` の検査を外す。`engines.node` と `engineStrict` で代用する |
+| 検査 | `scripts/check-node-version.sh` で、動いている Node と `devcontainer.json` の feature の `version`(書いてあれば)のメジャーバージョンを `.nvmrc` と比べる。ルートの `package.json` の `preinstall` から実行し、ずれていれば install を失敗させる | `preinstall` の検査を外す。`engines.node` と `engineStrict` で代用する |
 
 ## 結果
 
-- 良い面: Node のバージョンを書く場所が `.nvmrc` だけになり、Dev container や CI の Node とずれると install が止まる。依存パッケージの `engines` に左右されない。2029-04 までバージョンを上げる必要がない。
+- 良い面: Node のバージョンの基準が `.nvmrc` だけになり、Dev container や CI の Node とずれると、コンテナの起動時に警告が出て、install が止まる。依存パッケージの `engines` に左右されない。2029-04 までバージョンを上げる必要がない。
 - 受け入れた不利益: Dev container の Node は feature の既定(`lts`)に従うので、次の LTS(28)が出たあとにコンテナを作り直すと、install が検査で止まる。そのときに feature の `version` を書いて合わせる(`devcontainer.json` は `.nvmrc` を読めない)。パッチバージョンは環境ごとに異なりうる。
 - 未解決の保留事項: 次の LTS(28)へ上げる時期は、26 のサポート終了(2029-04-30)より前に、新しい ADR で決める。
 - 移行作業:
-  - ルートに `.nvmrc` を作る。
-  - `scripts/check-node-version.sh` を作り、ルートの `package.json` の `preinstall` から実行する(ADR-0005 の移行作業と同時に行う)。
+  - ルートの `package.json` の `preinstall` から `scripts/check-node-version.sh` を実行する(ADR-0005 の移行作業と同時に行う)。`.nvmrc` とスクリプト、Dev container の起動時の検査は、この ADR と同時に用意した。
   - Node を使う CI のジョブで、`actions/setup-node` の `node-version-file: .nvmrc` を使う。
