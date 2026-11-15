@@ -6,6 +6,7 @@
 - 配るのは `Dockerfile` で作るイメージ 1 つ。管理画面と API が 1 つのポートで動く。
 - `TRIAL_PASSWORD` を設定すると、開いたときにユーザー名(既定 `trial`、`TRIAL_USER` で変えられる)とパスワードを尋ねる。
   URL と合言葉を伝えた人だけが使える。**外部に置くときは、必ず設定する**(アプリ自体には、まだログインがない)。
+  配布するイメージは、`TRIAL_PASSWORD` がないと起動しない。
 - PRO-CTCAE 日本語版の PDF は配らない(`.dockerignore` で `docs/` を除いている)。PDF から書き出したマスタのデータファイル
   (`apps/api/data/pro-ctcae-master.json`。git では管理しない)だけを同梱する。
 

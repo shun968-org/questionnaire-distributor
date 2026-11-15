@@ -1,6 +1,7 @@
 // DB なしで動かす起動。データはメモリ上だけにあり、止めると消える(試用・画面の確認用)。
 // 本来の起動は index.ts(PostgreSQL を使う)。
-//   TRIAL_PASSWORD  設定すると、ユーザー名とパスワードを尋ねる(Basic 認証)。ユーザー名は TRIAL_USER(既定 trial)
+//   TRIAL_PASSWORD  設定すると、ユーザー名とパスワードを尋ねる(Basic 認証)。ユーザー名は TRIAL_USER(既定 trial)。
+//                   NODE_ENV=production では必須(なければ起動しない)
 //   PORT            待ち受けるポート(既定 3000)
 //   WEB_DIST / PRO_CTCAE_MASTER_FILE  管理画面のビルド結果と、マスタのデータファイルの場所(1 つのファイルにまとめて配るとき)
 import { existsSync } from 'node:fs';
@@ -31,6 +32,11 @@ if (master) {
 
 // 外部に公開するときは、合言葉を知っている人だけに絞る
 const password = process.env.TRIAL_PASSWORD;
+// 配布するイメージ(NODE_ENV=production)では、合言葉を付け忘れたまま公開しないよう、合言葉がなければ起動しない
+if (!password && process.env.NODE_ENV === 'production') {
+  console.error('TRIAL_PASSWORD が設定されていない。合言葉なしでは起動しない(アプリ自体にはログインがない)。');
+  process.exit(1);
+}
 const server = password
   ? new Hono().use(basicAuth({ username: process.env.TRIAL_USER ?? 'trial', password, realm: 'trial' })).route('/', app)
   : app;
