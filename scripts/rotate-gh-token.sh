@@ -23,7 +23,8 @@ if [ -f "$env_file" ]; then
 fi
 
 # 1. 作成画面を事前入力した URL を出す(リポジトリの選択だけは画面で行う)
-name="${repo:0:30}-$(date +%Y%m%d)"
+# 名前は重複できない(上限 40 文字)ので、同じ日に何度実行しても重ならないよう時刻まで入れる
+name="${repo:0:26}-$(date +%Y%m%d-%H%M)"
 cat <<EOF
 1. 次の URL を開き、Generate token を押す前に Repository access を変える。
    既定の「All repositories」ではなく「Only select repositories」→ $repo を選ぶ(URL では指定できない)。
