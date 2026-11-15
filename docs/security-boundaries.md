@@ -200,3 +200,7 @@ compose 相当(ユーザー定義ネットワーク + PostgreSQL)と Docker の�
 | Notion | `NOTION_API_TOKEN`(`.env`) | 残る |
 
 `GH_TOKEN` はこのリポジトリだけに絞った fine-grained token にする。エージェントから読めるので、漏れた場合の被害をこのリポジトリに限るため。
+
+`GH_TOKEN` の再発行(期限切れ・漏れたとき)は、自分のターミナルで `task rotate-gh-token` を実行する。
+権限を入力済みの作成画面の URL を出し、貼り付けたトークンで読めるかを確かめてから `.env` を置き換え、古いトークンを無効にする(`POST /credentials/revoke`)。
+トークンが会話やログに残らないよう、エージェントには実行させない。反映には Rebuild Container が要る。

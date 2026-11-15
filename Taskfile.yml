@@ -20,3 +20,9 @@ tasks:
       PROMPT: '/addressing-review-comments {{.PR}} {{.CLI_ARGS}}'
     cmds:
       - claude "$PROMPT"
+
+  rotate-gh-token:
+    desc: .env の GH_TOKEN を新しいトークンに入れ替え、古いトークンを無効にする(自分のターミナルで実行する)
+    interactive: true
+    cmds:
+      - scripts/rotate-gh-token.sh
