@@ -1,4 +1,4 @@
-# ADR-0006: Node のバージョンを 26 に固定し、.nvmrc を基準にする
+# ADR-0006: Node のバージョンを 26 に固定し、.nvmrc を唯一の基準にする
 
 - ステータス: 採用
 - 日付: 2026-11-15
@@ -28,7 +28,7 @@ ADR-0001 で API を Node 上で動かすと決め、ADR-0005 で Node のバー
 
 ## 決定
 
-**Node はメジャーバージョン 26 に固定し、ルートの `.nvmrc` を基準にする。Dev container・CI・pnpm の 3 か所で同じバージョンを強制する。**
+**Node はメジャーバージョン 26 に固定し、ルートの `.nvmrc` を唯一の基準にする。install のたびに、動いている Node のメジャーバージョンが `.nvmrc` と一致するかを検査する。**
 
 判断の根拠:
 
@@ -40,17 +40,17 @@ ADR-0001 で API を Node 上で動かすと決め、ADR-0005 で Node のバー
 
 | 対象 | 必須 | 禁止 |
 |---|---|---|
-| 基準 | ルートの `.nvmrc` に `26` と書く | `.nvmrc` 以外にバージョンの基準を作る |
-| Dev container | `.devcontainer/devcontainer.json` の Node の feature に `"version": "26"` を書く。`.nvmrc` を変えるときは同じコミットで変える | feature の `version` を省く、または `lts` にする |
+| 基準 | ルートの `.nvmrc` に `26` と書く | `.nvmrc` 以外のファイルに Node のバージョンを書く(`engines.node` を含む。下の Dev container の例外を除く) |
+| Dev container | Node の feature は既定(`lts`)のままにする。検査で止まったら、そのときに feature の `version` を `.nvmrc` に合わせる | ― |
 | CI | `actions/setup-node` の `node-version-file: .nvmrc` で入れる | ワークフローに Node のバージョンを直接書く |
 | 検査 | ルートの `package.json` の `preinstall` で `scripts/check-node-version.sh` を実行し、動いている Node のメジャーバージョンが `.nvmrc` と違えば失敗させる | `preinstall` の検査を外す。`engines.node` と `engineStrict` で代用する |
 
 ## 結果
 
-- 良い面: Dev container・CI・pnpm で Node のメジャーバージョンがそろい、ずれると install が止まる。2029-04 までバージョンを上げる必要がない。
-- 受け入れた不利益: バージョンを上げるときは `.nvmrc`・`devcontainer.json`・`engines.node` の 3 か所を同時に変える必要がある(`devcontainer.json` は `.nvmrc` を読めないため)。パッチバージョンは環境ごとに異なりうる。
+- 良い面: Node のバージョンを書く場所が `.nvmrc` だけになり、Dev container や CI の Node とずれると install が止まる。依存パッケージの `engines` に左右されない。2029-04 までバージョンを上げる必要がない。
+- 受け入れた不利益: Dev container の Node は feature の既定(`lts`)に従うので、次の LTS(28)が出たあとにコンテナを作り直すと、install が検査で止まる。そのときに feature の `version` を書いて合わせる(`devcontainer.json` は `.nvmrc` を読めない)。パッチバージョンは環境ごとに異なりうる。
 - 未解決の保留事項: 次の LTS(28)へ上げる時期は、26 のサポート終了(2029-04-30)より前に、新しい ADR で決める。
 - 移行作業:
-  - ルートに `.nvmrc` を作り、`devcontainer.json` の Node の feature に `"version": "26"` を書く。
+  - ルートに `.nvmrc` を作る。
   - `scripts/check-node-version.sh` を作り、ルートの `package.json` の `preinstall` から実行する(ADR-0005 の移行作業と同時に行う)。
   - Node を使う CI のジョブで、`actions/setup-node` の `node-version-file: .nvmrc` を使う。
