@@ -19,8 +19,11 @@ export function createUnitOfWork(prisma: PrismaClient): UnitOfWork {
           }),
         );
       } catch (err) {
-        // トランザクション自体のエラー(書き込みの競合・デッドロック)は、業務エラーに変換する
-        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2034') {
+        // トランザクション自体のエラー(書き込みの競合・デッドロック)と、同時の操作で起きる制約の違反は、業務エラーに変換する
+        //   P2034: 書き込みの競合・デッドロック
+        //   P2002: 一意制約(同時に同じ患者 ID を発行した、など)
+        //   P2003: 外部キー制約(使われ始めた治療計画・質問票を、同時に削除した、など)
+        if (err instanceof Prisma.PrismaClientKnownRequestError && ['P2034', 'P2002', 'P2003'].includes(err.code)) {
           throw new ConflictError('ほかの操作と重なった。もう一度やり直す');
         }
         throw err;
