@@ -2,7 +2,7 @@
 
 - ステータス: 採用
 - 日付: 2026-11-14
-- 関連: ADR-0001、ADR-0002
+- 関連: ADR-0001、ADR-0002、ADR-0007
 
 ## コンテキスト
 
@@ -46,3 +46,4 @@
   - フォーム、ルータに使うライブラリは、別の ADR で決める。
   - 認証を入れるときは、CSRF 対策(Cookie の `SameSite`、状態を変えるリクエストでの `Origin` ヘッダーの検査)を同時に入れる。
 - 移行作業: `apps/web` から import してよいものを、lint(`no-restricted-imports`)で検査する。`apps/api` からは `apps/api/src/app.ts` の `AppType` の `import type` だけを許可する。
+- 追記(2026-11-15): 「未解決の保留事項」のフォーム・ルータに使うライブラリは、ADR-0007 で React Router(データのモード)と React Hook Form に決めた。
