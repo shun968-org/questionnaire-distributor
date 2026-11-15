@@ -72,7 +72,8 @@ export function GroupDetailPage() {
   const { group, plan, schedules, today } = detail;
   const [suspending, setSuspending] = useState<string | null>(null);
   const confirmed = group.confirmedAt !== null;
-  const scheduleOf = (patientId: string) => schedules.find((s) => s.patientId === patientId);
+  const scheduleByPatient = new Map(schedules.map((s) => [s.patientId, s]));
+  const scheduleOf = (patientId: string) => scheduleByPatient.get(patientId);
   const suspendingPatient = group.patients.find((p) => p.id === suspending);
 
   return (
@@ -196,6 +197,7 @@ export function GroupDetailPage() {
 function ScheduleTimeline({ detail }: { detail: GroupDetail }) {
   const { group, plan, schedules, today } = detail;
   const deliveries = schedules.flatMap((s) => s.deliveries);
+  const scheduleByPatient = new Map(schedules.map((s) => [s.patientId, s]));
   if (!plan) return <p className="hint">治療計画を選ぶと、配信の予定が出る。</p>;
   if (deliveries.length === 0) return <p className="hint">治療開始日を設定すると、その患者の配信の予定が出る。</p>;
 
@@ -245,7 +247,7 @@ function ScheduleTimeline({ detail }: { detail: GroupDetail }) {
           </div>
         </div>
         {group.patients.map((p) => {
-          const schedule = schedules.find((s) => s.patientId === p.id);
+          const schedule = scheduleByPatient.get(p.id);
           return (
             <div key={p.id} className="timeline-row">
               <div className="timeline-label">
