@@ -23,7 +23,7 @@ for f in "${files[@]}"; do
     || report "$f: '- 日付: YYYY-MM-DD' が無い"
 
   # コードフェンス内の見出しは数えない
-  headings="$(awk '/^```/ { in_fence = !in_fence; next } !in_fence && /^## /' "$f")"
+  headings="$(adr_outside_fences <"$f" | grep '^## ' || true)"
   [ "$headings" = $'## コンテキスト\n## 決定\n## 結果' ] \
     || report "$f: 見出しは '## コンテキスト' '## 決定' '## 結果' の3つをこの順で置く"
 done
