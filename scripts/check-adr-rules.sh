@@ -3,7 +3,7 @@
 # 使い方:
 #   scripts/check-adr-rules.sh --staged        staged の内容を比較元と比べる(pre-commit 用)
 #   scripts/check-adr-rules.sh [--base REF]    作業ツリーの内容を比較元と比べる
-# 比較元の既定は main との分岐点。main に入った ADR だけを採用済みとして扱い、
+# 比較元の既定は main との分岐点。main に入った 採用・非推奨・置換済み の ADR を採用済みとして扱い、
 # ブランチで書いている途中の ADR(PR のレビュー指摘の反映など)は自由に直せる。
 # 採用済み ADR のタイトル・「コンテキスト」「決定」の誤字・リンクだけを直すときは、
 # ADR_ALLOW_ADOPTED_EDIT=1 を付けて実行する。
@@ -61,6 +61,14 @@ current_content() {
 }
 
 status_of() { sed -n 's/^- ステータス: //p' | head -1; }
+# 採用を経たステータスの順(採用 → 非推奨 → 置換済み)。提案中・却下は空
+status_rank() {
+  case "$1" in
+    採用) echo 1 ;;
+    非推奨) echo 2 ;;
+    *) if [[ "$1" =~ $ADR_SUPERSEDED_RE ]]; then echo 3; fi ;;
+  esac
+}
 # 見出しはコードフェンスの外のものだけを区切りとして扱う
 # 採用後に書き換えてはいけない部分(1 行目のタイトルから「結果」の直前まで)。
 # 冒頭のステータス(別の規則で検査する)と関連(後続の ADR を書き足す)の行は除く。
@@ -147,19 +155,22 @@ for f in "${before[@]}"; do
     continue
   fi
 
+  # 採用を経た ADR(採用・非推奨・置換済み)を守る。提案中・却下は書き換えてよい
   old="$(git show "$base:$f")"
-  [ "$(status_of <<<"$old")" = 採用 ] || continue
+  old_status="$(status_of <<<"$old")"
+  old_rank="$(status_rank "$old_status")"
+  [ -n "$old_rank" ] || continue
 
   new_status="${status_by[$f]}"
-  if [ "$new_status" != 採用 ] && [ "$new_status" != 非推奨 ] \
-    && ! [[ "$new_status" =~ $ADR_SUPERSEDED_RE ]]; then
-    report "$f: 採用済み ADR のステータスは 非推奨 か 置換済み（ADR-XXXX） にだけ変えられる(今は '$new_status')"
+  new_rank="$(status_rank "$new_status")"
+  if [ "$new_status" != "$old_status" ] && { [ -z "$new_rank" ] || ((new_rank <= old_rank)); }; then
+    report "$f: ステータスを '$old_status' から '$new_status' には変えられない(採用 → 非推奨 → 置換済み（ADR-XXXX） の向きにだけ進める)"
   fi
 
   new="${body_by[$f]}"
   if [ "$(immutable_part <<<"$old")" != "$(immutable_part <<<"$new")" ]; then
     if [ "${ADR_ALLOW_ADOPTED_EDIT:-}" = 1 ]; then
-      echo "注意: $f: 採用済み ADR のタイトル・「コンテキスト」「決定」の変更を、ADR_ALLOW_ADOPTED_EDIT=1 で通した" >&2
+      echo "注意: $f: 採用済み ADR のタイトル・日付・「コンテキスト」「決定」の変更を、ADR_ALLOW_ADOPTED_EDIT=1 で通した" >&2
     else
       report "$f: 採用済み ADR のタイトル・日付・「コンテキスト」「決定」は書き換えない。決定が変わったなら新しい ADR を起こす(誤字・リンクの修正だけなら ADR_ALLOW_ADOPTED_EDIT=1 を付けて実行する)"
     fi
