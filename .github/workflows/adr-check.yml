@@ -1,8 +1,9 @@
 name: adr-check
 
-# ADR の書式と運用規則を、PR を取り込んだ結果と最新の main を比べて検査する。
-# pre-commit(lefthook)を --no-verify で回避したときや、ほかの PR が先に main へ入れた
-# ADR 番号との重なりを検出する。
+# ADR の書式と運用規則を、PR を取り込んだ結果と、実行した時点の最新の main を比べて検査する。
+# pre-commit(lefthook)を --no-verify で回避したときや、実行した時点までにほかの PR が
+# main へ入れた ADR 番号との重なりを検出する。先行の PR が後からマージされても自動では
+# 再実行されないので、そのときは再実行する(CONTRIBUTING の「設計判断の記録」)。
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
