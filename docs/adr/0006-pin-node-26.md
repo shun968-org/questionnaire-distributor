@@ -1,6 +1,6 @@
 # ADR-0006: Node のバージョンを 26 に固定し、.nvmrc を唯一の基準にする
 
-- ステータス: 採用
+- ステータス: 非推奨
 - 日付: 2026-11-15
 - 関連: ADR-0001、ADR-0005
 
@@ -53,3 +53,4 @@ ADR-0001 で API を Node 上で動かすと決め、ADR-0005 で Node のバー
 - 移行作業:
   - ルートの `package.json` の `preinstall` から `scripts/check-node-version.sh` を実行する(ADR-0005 の移行作業と同時に行う)。`.nvmrc` とスクリプト、Dev container の起動時の検査は、この ADR と同時に用意した。
   - Node を使う CI のジョブで、`actions/setup-node` の `node-version-file: .nvmrc` を使う。
+- 追記(2026-11-15): ADR にはアーキテクチャ(構造・レイヤ間の接続方法)に関係するものだけを定義することにした。この ADR は全体が Node のバージョンとその管理で、アーキテクチャに関係しないため非推奨にした。`.nvmrc` を基準にした Node のバージョンの管理と検査は、CONTRIBUTING に移した。
