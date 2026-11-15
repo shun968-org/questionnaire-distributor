@@ -14,6 +14,12 @@ const questionSchema = z
     if (isChoice && q.options.length < 2) {
       ctx.addIssue({ code: 'custom', path: ['options'], message: '選択肢を 2 つ以上、1 行に 1 つ入力する' });
     }
+    if (new Set(q.options).size !== q.options.length) {
+      ctx.addIssue({ code: 'custom', path: ['options'], message: '同じ選択肢が重なっている' });
+    }
+    if (!isChoice && q.options.length > 0) {
+      ctx.addIssue({ code: 'custom', path: ['options'], message: '選択式でない質問には、選択肢を付けない' });
+    }
   });
 
 export const questionnaireFormSchema = z.object({

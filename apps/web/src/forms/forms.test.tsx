@@ -481,3 +481,31 @@ test('ボード: 配信のない行は、ほかの質問票に配信を置いて
   fireEvent.pointerUp(row, { pointerId: 1 });
   expect(names()).toEqual(['症状チェック', '簡易チェック']);
 });
+
+test('質問票: 回答の形式を選択式でなくすと、選択肢は送られない。同じ選択肢が重なると登録できない', async () => {
+  const user = userEvent.setup();
+  const create = vi.spyOn(api.questionnaires, 'create').mockResolvedValue({ id: Q1 } as never);
+  inRouter(
+    <QuestionnaireForm
+      proCtcae={proCtcae}
+      initial={{ name: '形式', description: '', templateKey: null, sections: [{ title: '章', questions: [choice('A'), choice('B')] }] }}
+    />,
+  );
+  const types = screen.getAllByLabelText('回答の形式');
+  await user.selectOptions(types[0]!, 'NUMBER');
+  // 2 問目は、選択肢を重ねる
+  const options = screen.getByText('選択肢(1 行に 1 つ)').closest('label')!.querySelector('textarea')!;
+  await user.clear(options);
+  await user.type(options, 'はい{Enter}はい');
+  await user.click(screen.getByRole('button', { name: '質問票マスタに登録する' }));
+  expect(await screen.findByText('同じ選択肢が重なっている')).toBeTruthy();
+  expect(create).not.toHaveBeenCalled();
+
+  await user.type(options, '{Backspace}{Backspace}いいえ');
+  await user.click(screen.getByRole('button', { name: '質問票マスタに登録する' }));
+  await waitFor(() => expect(create).toHaveBeenCalled());
+  expect(create.mock.calls[0]![0].sections[0]!.questions.map((q) => [q.answerType, q.options])).toEqual([
+    ['NUMBER', []],
+    ['SINGLE_CHOICE', ['はい', 'いいえ']],
+  ]);
+});

@@ -161,8 +161,8 @@ export function QuestionnairePreviewPage() {
                   <td>
                     {q.options.length > 0 ? (
                       <div className="chips">
-                        {q.options.map((o) => (
-                          <span key={o} className="option">
+                        {q.options.map((o, k) => (
+                          <span key={k} className="option">
                             {o}
                           </span>
                         ))}

@@ -83,6 +83,7 @@ export function QuestionnaireForm({ id, initial, proCtcae }: Props) {
           onMove={(to) => sections.move(i, to)}
           onRemove={() => sections.remove(i)}
           onMoveQuestion={(index, to) => moveQuestion(i, index, to)}
+          onClearOptions={(j) => setValue(`sections.${i}.questions.${j}.options`, [], { shouldDirty: true })}
           onMoveQuestionFrom={(from, fromIndex, toIndex) => moveQuestion(from, fromIndex, i, toIndex)}
         />
       ))}
@@ -118,6 +119,7 @@ type SectionProps = {
   onMove: (to: number) => void;
   onRemove: () => void;
   onMoveQuestion: (index: number, toSection: number) => void;
+  onClearOptions: (questionIndex: number) => void;
   /** ほかの章の質問を、この章の toIndex 番目(省くと最後)へ移す */
   onMoveQuestionFrom: (fromSection: number, fromIndex: number, toIndex?: number) => void;
 };
@@ -262,7 +264,14 @@ function SectionEditor(props: SectionProps) {
                   <div className="row top">
                     <label className="inline">
                       回答の形式
-                      <select {...register(`${name}.${j}.answerType`)}>
+                      <select
+                        {...register(`${name}.${j}.answerType`, {
+                          // 選択式でなくしたら、選択肢を消す(隠れた選択肢が、検証・送信されないように)
+                          onChange: (e) => {
+                            if (e.target.value === 'NUMBER' || e.target.value === 'TEXT') props.onClearOptions(j);
+                          },
+                        })}
+                      >
                         {ANSWER_TYPES.map(([value, label]) => (
                           <option key={value} value={value}>
                             {label}
@@ -281,6 +290,8 @@ function SectionEditor(props: SectionProps) {
                           control={control}
                           name={`${name}.${j}.options`}
                           render={({ field }) => <OptionsInput value={field.value} onChange={field.onChange} />}
+                          // 選択式でなくして戻したら、入力欄を作り直す
+                          key={String(isChoice)}
                         />
                         <FieldError message={err?.options?.message} />
                       </label>
@@ -331,17 +342,16 @@ function SectionEditor(props: SectionProps) {
   );
 }
 
-/** 選択肢の入力欄。入力中の空行を保つため、表示用の文字列を別に持つ */
+/**
+ * 選択肢の入力欄。値は、フォームの状態(選択肢の配列)だけで持つ。
+ * 入力の途中の空行や行末の空白は、欄(DOM)が持つ。フォームの状態には、空行を除いた選択肢を入れる
+ */
 function OptionsInput({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
-  const [text, setText] = useState(value.join('\n'));
   return (
     <textarea
-      rows={Math.max(3, text.split('\n').length)}
-      value={text}
-      onChange={(e) => {
-        setText(e.target.value);
-        onChange(e.target.value.split('\n').map((s) => s.trim()).filter(Boolean));
-      }}
+      rows={Math.max(3, value.length + 1)}
+      defaultValue={value.join('\n')}
+      onChange={(e) => onChange(e.target.value.split('\n').map((s) => s.trim()).filter(Boolean))}
     />
   );
 }
