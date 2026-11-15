@@ -6,7 +6,8 @@
 # 比較元の既定は main との分岐点。main に入った 採用・非推奨・置換済み の ADR を採用済みとして扱い、
 # ブランチで書いている途中の ADR(PR のレビュー指摘の反映など)は自由に直せる。
 # 採用済み ADR のタイトル・「コンテキスト」「決定」・「結果」の既存の行の誤字・リンクだけを直すときは、
-# ADR_ALLOW_ADOPTED_EDIT=1 を付けて実行する。
+# ADR_ALLOW_ADOPTED_EDIT=1 を付けて実行する。この変数は採用済み ADR の書き換えの検査をすべて警告に下げるので、
+# 誤字・リンクだけを直すコミットに限って使い、ほかの変更と混ぜない。
 set -euo pipefail
 # shellcheck source-path=SCRIPTDIR source=lib/adr.sh
 source "$(dirname "${BASH_SOURCE[0]}")/lib/adr.sh"
