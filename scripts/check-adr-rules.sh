@@ -74,12 +74,14 @@ result_part() { awk '/^## 結果$/ { p = 1; next } p'; }
 mapfile -t current < <(list_current)
 
 declare -A file_of=()   # 番号 -> ファイル
+declare -A body_by=()   # ファイル -> 内容
 declare -A status_by=() # ファイル -> ステータス
 
 # --- 作業ツリー(または staged)の ADR だけで判断できる規則 ---
 for f in "${current[@]}"; do
   n="$(number_of "$f")"
   body="$(current_content "$f")"
+  body_by[$f]="$body"
   status_by[$f]="$(status_of <<<"$body")"
 
   title_n="$(head -1 <<<"$body" | sed -nE 's/^# ADR-([0-9]{4}): .*/\1/p')"
@@ -148,7 +150,7 @@ for f in "${before[@]}"; do
     report "$f: 採用済み ADR のステータスは 非推奨 か 置換済み（ADR-XXXX） にだけ変えられる(今は '$new_status')"
   fi
 
-  new="$(current_content "$f")"
+  new="${body_by[$f]}"
   if [ "$(immutable_part <<<"$old")" != "$(immutable_part <<<"$new")" ]; then
     if [ "${ADR_ALLOW_ADOPTED_EDIT:-}" = 1 ]; then
       echo "注意: $f: 採用済み ADR の「コンテキスト」「決定」の変更を、ADR_ALLOW_ADOPTED_EDIT=1 で通した" >&2
