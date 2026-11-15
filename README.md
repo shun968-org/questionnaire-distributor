@@ -4,20 +4,24 @@
 管理画面と、その設定を PostgreSQL に読み書きする API からなる。
 
 > [!NOTE]
-> アプリケーションの実装はまだ始まっていない。現在は開発環境・開発の進め方・技術選定(ADR)を整えている段階。
+> アプリケーションの実装はまだ始まっていない。現在は開発環境・開発の進め方・アーキテクチャ(ADR)を整えている段階。
 
 ## 技術スタック
 
-技術選定の経緯と根拠は [`docs/adr/`](docs/adr/) の ADR に残している。
+アーキテクチャ(アプリの分け方、レイヤ、依存の規則)は [`docs/adr/`](docs/adr/) の ADR で決めている。ADR にはライブラリの名前を書かないので、採用したものはこの表に書く。
 
-| 対象 | 採用 | ADR |
-| --- | --- | --- |
-| 言語・API サーバ | TypeScript・Hono | [ADR-0001](docs/adr/0001-use-typescript-and-hono.md) |
-| DB アクセス | Prisma(PostgreSQL) | [ADR-0002](docs/adr/0002-use-prisma-for-db-access.md) |
-| 管理画面 | Vite + React(CSR) | [ADR-0003](docs/adr/0003-build-admin-ui-as-csr-with-vite-react.md) |
-| API の層構成 | route / service / repository | [ADR-0004](docs/adr/0004-layer-api-into-route-service-repository.md) |
-| パッケージ管理 | pnpm workspace | [ADR-0005](docs/adr/0005-use-pnpm-workspace.md) |
-| Node のバージョン | Node 26(`.nvmrc`) | [ADR-0006](docs/adr/0006-pin-node-26.md) |
+| 役割 | 採用 |
+| --- | --- |
+| 言語 | TypeScript |
+| 実行環境 | Node(バージョンは `.nvmrc`) |
+| パッケージ管理 | pnpm workspace |
+| API の HTTP フレームワーク | Hono |
+| DB | PostgreSQL |
+| ORM・マイグレーション | Prisma |
+| スキーマの検証 | zod |
+| 管理画面 | React(ビルドは Vite) |
+| 管理画面のルータ | React Router |
+| 管理画面のフォーム | React Hook Form |
 
 ## 開発環境の導入
 
@@ -113,7 +117,7 @@ Dev container が自動で行うことを手で行う。この場合、上記の
    | [Task](https://taskfile.dev/) | `task comments`・`task fix`・`task rotate-gh-token` |
    | [Claude Code](https://docs.anthropic.com/ja/docs/claude-code)(`claude`) | コミットメッセージの下書き(無ければ下書きを省く)、`task fix` |
    | curl・jq | `task rotate-gh-token` |
-   | Node(`.nvmrc` のバージョン) | アプリの開発(ADR-0006) |
+   | Node(`.nvmrc` のバージョン) | アプリの開発 |
 
 2. `gh` にログインし、`git push` の認証に使う。
 
