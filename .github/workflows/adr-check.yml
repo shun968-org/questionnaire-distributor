@@ -12,6 +12,11 @@ on:
       - scripts/lib/adr.sh
       - .github/workflows/adr-check.yml
 
+# ラベルの付け外しや連続した push で、古い実行の結果が最後に残らないようにする
+concurrency:
+  group: adr-check-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
