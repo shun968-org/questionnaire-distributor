@@ -41,7 +41,8 @@ ADR-0003 で、管理画面(`apps/web`)を Vite と React の SPA にし、API �
 | 対象 | 必須 | 禁止 |
 |---|---|---|
 | ルータ | `react-router` のデータのモードを使う。ルートは `createBrowserRouter` で定義し、`react-router/dom` の `RouterProvider` で描く | フレームワークのモード(`@react-router/dev`)、宣言型のモード(`<BrowserRouter>`・`<Routes>`)を使う。ほかのルータのライブラリを入れる |
-| 画面のデータの読み込み | 画面を開くときに要るデータは、ルートの `loader` で `hc` から API を呼んで取得する | 画面を開くときのデータの取得を、コンポーネントの `useEffect` で行う |
+| 画面のデータの読み込み | 画面を開くときに要るデータは、ルートの `loader` で `hc` から API を呼んで取得する。`hc` は 4xx・5xx でも例外を投げないので、`loader` で `res.ok` を確かめ、失敗したら throw する | 画面を開くときのデータの取得を、コンポーネントの `useEffect` で行う。`res.ok` を確かめずに結果を返す |
+| 読み込み中とエラーの表示 | 一番上のルートに、最初の読み込み中に出す `HydrateFallback` と、`loader` のエラーを出す `errorElement` を置く。画面の移動中の表示は、共通のレイアウトで `useNavigation` の状態を見て出す | 読み込み中・エラーの表示を、画面ごとに別の仕組みで作る(画面に固有の表示が要るときは、そのルートに `errorElement` を足す) |
 | フォーム | `react-hook-form` の `useForm` で状態を持つ。検証は `@hookform/resolvers/zod` の `zodResolver` に zod のスキーマを渡して行う。標準の入力欄でない部品は `Controller`(または `useController`)でつなぐ | フォームの入力値を `useState` に写して管理する。`register` の `required`・`pattern` などの検証のオプションで、zod のスキーマと別に検証を書く |
 | フォームの送信 | `handleSubmit` の中で `hc` から API を呼ぶ。送信後に画面のデータを読み直すときは、`useRevalidator` か画面の移動で `loader` を再実行する | React Router の `<Form>` と `action` で送信する(送信の経路が 2 つになるため) |
 | API のエラーの表示 | API が返した入力のエラーは、`setError` で該当する入力欄に表示する | API のエラーをフォームの外の状態で別に管理する |
