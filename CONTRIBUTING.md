@@ -66,3 +66,5 @@ scripts/setup-github-repo.sh
 ## 設計判断の記録
 
 技術選定などの判断は `docs/adr/` に ADR として残す。Claude に書かせるときは `/managing-adrs`(または「ADR を書いて」)。
+
+ADR を含むコミットでは、pre-commit で書式(`scripts/check-adr-format.sh`)と運用規則(`scripts/check-adr-rules.sh`)を検査する。採用済み ADR の誤字・リンクだけを直すときは `ADR_ALLOW_ADOPTED_EDIT=1 git commit` で通す。
