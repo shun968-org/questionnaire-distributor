@@ -1,0 +1,12 @@
+{
+  "name": "questionnaire-distributor",
+  "private": true,
+  "packageManager": "pnpm@12.21.0",
+  "scripts": {
+    "preinstall": "bash scripts/check-node-version.sh",
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test"
+  }
+}

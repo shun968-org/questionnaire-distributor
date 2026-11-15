@@ -4,7 +4,8 @@
 管理画面と、その設定を PostgreSQL に読み書きする API からなる。
 
 > [!NOTE]
-> アプリケーションの実装はまだ始まっていない。現在は開発環境・開発の進め方・アーキテクチャ(ADR)を整えている段階。
+> 最初の設定画面(質問票マスタ・治療計画の配信スケジュール・患者グループ)を実装している段階。いまあるのは API だけで、管理画面はまだない。
+> 患者が回答する画面、回答の閲覧・集計、配信の実行(ワーカー)もまだない。
 
 ## 技術スタック
 
@@ -22,6 +23,8 @@
 | 管理画面 | React(ビルドは Vite) |
 | 管理画面のルータ | React Router |
 | 管理画面のフォーム | React Hook Form |
+| テスト | Vitest |
+| 開発用の DB の起動 | embedded-postgres(コンテナの中で PostgreSQL を動かす) |
 
 ## 開発環境の導入
 
@@ -138,6 +141,41 @@ Dev container が自動で行うことを手で行う。この場合、上記の
 
 `GH_TOKEN` が期限切れになったり漏れたりしたときは、**自分のターミナルで** `task rotate-gh-token` を実行する
 (トークンが会話やログに残らないよう、AI エージェントには実行させない)。
+
+## アプリの起動
+
+```sh
+pnpm install
+pnpm --filter api db:dev        # 開発用の PostgreSQL を起動する(別のターミナルで動かしたままにする)
+pnpm --filter api db:migrate    # スキーマを DB に反映し、ORM のクライアントを生成する
+pnpm --filter api db:seed       # 初期データを入れる: PRO-CTCAE マスタ(下を参照)と、治療計画のサンプル
+pnpm --filter api dev           # API(:3000)を起動する
+```
+
+`db:migrate`・`db:generate` は、Prisma のエンジンを `binaries.prisma.sh` から取得する。Dev container のファイアウォールの
+許可リスト(`.devcontainer/init-firewall.sh`)にこのホストがないと失敗する。
+
+テストと型の検査は `pnpm test`・`pnpm typecheck`(API の型の検査は、ORM のクライアントの生成が済んでいること)。
+
+レジメンのテンプレート(`apps/api/src/services/catalog/`)は、質問票と治療計画の初期値を入れるためだけに使う。
+PRO-CTCAE の症状と質問(質問文・選択肢)は、ソースに持たず、DB のマスタ(`ProCtcaeSymptom`・`ProCtcaeItem`)に持つ。
+元は [PRO-CTCAE 日本語版(JCOG)](https://jcog.jp/assets/pro-ctcae_japanese.pdf) の PDF で、次の順に扱う。PDF もデータファイルも git では管理しない。
+
+```sh
+pnpm --filter api pro-ctcae:export        # docs/pro-ctcae_japanese.pdf から、データファイル apps/api/data/pro-ctcae-master.json を書き出す
+pnpm --filter api db:import-pro-ctcae     # データファイル(なければ PDF)で、DB のマスタを置き換える。パスを渡すこともできる
+```
+
+データファイルを書き出した後は、PDF は要らない(PDF は参考として置いたもので、配布物には入れない)。
+マスタを置き換えても、登録済みの質問票は登録したときの文言のまま変わらない。
+
+質問票の中では、PRO-CTCAE の質問文と選択肢は編集できず、API もマスタと違う文言を受け付けない。
+マスタが空のまま、またはテンプレートが使う症状がマスタにないまま画面を開くと、API はサーバのエラー(500)を返す。
+
+`db:seed` は、PRO-CTCAE マスタが空ならデータファイル(なければ PDF)から取り込み、続けて治療計画のサンプル
+(レジメンのテンプレートごとに、「【サンプル】」で始まる治療計画と、その配信で使う質問票「PRO-CTCAE（A set）」)と、
+レジメンによらない短い質問票「PRO-CTCAE（B set）」を登録する。登録済みなら何もしない。
+サンプルの配信日(ベースライン、8 日目、15 日目)は画面の見本で、レジメンの資料にあるものではない。
 
 ## 開発の進め方
 

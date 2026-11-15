@@ -21,3 +21,8 @@ TanStack
 wouter
 PostgreSQL
 TypeScript
+Vitest
+embedded-postgres
+tsx
+jsdom
+Testing Library

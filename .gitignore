@@ -23,3 +23,13 @@ node_modules/
 
 # Build / generated
 dist/
+
+# 開発用 DB のデータ・ORM の生成物
+.pgdata/
+apps/api/src/db/generated/
+
+# PRO-CTCAE 日本語版(JCOG の配布物。リポジトリに入れない)
+docs/pro-ctcae_japanese.pdf
+
+# PRO-CTCAE マスタのデータファイル(PDF から書き出したもの。git では管理せず、配布するイメージに同梱する)
+apps/api/data/
