@@ -27,20 +27,16 @@ export function createProCtcaeRepository(tx: Prisma.TransactionClient): ProCtcae
     },
 
     async replaceAll(symptoms) {
+      // 症状と質問を、それぞれ 1 回のクエリで入れる(1 件ずつ入れると、トランザクションの時間切れになりうる)
       await tx.proCtcaeSymptom.deleteMany();
-      for (const s of symptoms) {
-        await tx.proCtcaeSymptom.create({
-          data: {
-            code: s.code,
-            no: s.no,
-            term: s.term,
-            label: s.label,
-            note: s.note,
-            category: s.category,
-            items: { create: s.items.map((i, position) => ({ code: i.proCtcaeCode!, position, text: i.text, options: i.options })) },
-          },
-        });
-      }
+      await tx.proCtcaeSymptom.createMany({
+        data: symptoms.map((s) => ({ code: s.code, no: s.no, term: s.term, label: s.label, note: s.note, category: s.category })),
+      });
+      await tx.proCtcaeItem.createMany({
+        data: symptoms.flatMap((s) =>
+          s.items.map((i, position) => ({ code: i.proCtcaeCode!, symptomCode: s.code, position, text: i.text, options: i.options })),
+        ),
+      });
     },
   };
 }
