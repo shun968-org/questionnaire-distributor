@@ -85,6 +85,13 @@ result_part() {
     p'
 }
 
+# 競合中のパスは index に複数のステージで入り、git show ":パス" で読めない
+if $staged && [ -n "$(git ls-files -u -- "$ADR_DIR/")" ]; then
+  echo "NG: 競合を解消していない ADR がある。解消して git add してから実行する" >&2
+  git ls-files -u -- "$ADR_DIR/" | cut -f2 | sort -u | sed 's/^/  /' >&2
+  exit 1
+fi
+
 mapfile -t current < <(list_current)
 
 declare -A file_of=()   # 番号 -> ファイル
