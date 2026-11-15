@@ -53,8 +53,9 @@ MSG
     exit 1
   fi
   # 権限は、応答の x-oauth-scopes ヘッダに並ぶ(空白と改行を除く)
-  scopes=$(grep -i '^x-oauth-scopes:' <<< "$response" | head -n 1 | cut -d: -f2- | tr -d ' \r')
-  login=$(grep -o '"login": *"[^"]*"' <<< "$response" | head -n 1 | sed 's/.*"\([^"]*\)"$/\1/')
+  # 一致しないと grep が失敗を返すので、|| true で受ける(set -e で黙って止まらず、下の検査で理由を出す)
+  scopes=$(grep -i '^x-oauth-scopes:' <<< "$response" | head -n 1 | cut -d: -f2- | tr -d ' \r' || true)
+  login=$(grep -o '"login": *"[^"]*"' <<< "$response" | head -n 1 | sed 's/.*"\([^"]*\)"$/\1/' || true)
   [ -n "$login" ] || { echo "GitHub のユーザー名を読み取れない。中止する。" >&2; exit 1; }
 }
 
