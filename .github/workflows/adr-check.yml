@@ -27,6 +27,13 @@ jobs:
           # 比較元の origin/main を取得する
           fetch-depth: 0
 
+      # checkout した merge コミットは PR を作成・更新した時点の main を基にしている。
+      # 比較元の origin/main(実行時点の最新)とそろえるため、最新の main を取り込んでから検査する。
+      - name: 最新の main を取り込む
+        run: |
+          git -c user.name=adr-check -c user.email=adr-check@localhost merge --no-edit -q origin/main \
+            || { echo "::error::最新の main と競合する。main に rebase して push する"; exit 1; }
+
       - name: 書式
         run: scripts/check-adr-format.sh docs/adr/*.md
 
