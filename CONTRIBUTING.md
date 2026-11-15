@@ -68,8 +68,8 @@ scripts/setup-github-repo.sh
 
 ADR に書かない、ツールの運用と実装上の決まり。
 
-- **Node のバージョン**: ルートの `.nvmrc` だけに書き、ほかのファイル(`engines.node` など)には書かない。Dev container と CI の Node は `.nvmrc` に合わせる(CI は `actions/setup-node` の `node-version-file: .nvmrc`)。`scripts/check-node-version.sh` が、動いている Node と Dev container の設定のメジャーバージョンを `.nvmrc` と比べる(コンテナの起動時に警告する)。
-- **pnpm**: バージョンはルートの `package.json` の `packageManager` で固定する。依存の追加は `pnpm add`、実行は `pnpm --filter`・`pnpm exec`・`pnpm dlx` を使い、`npm install`・`yarn add`・`npx` は使わない。`pnpm-lock.yaml` をコミットし、CI では `pnpm install --frozen-lockfile` で入れる。依存の install 時のスクリプトは、要るものだけを `pnpm approve-builds <パッケージ>` で 1 つずつ許可する。
+- **Node のバージョン**: ルートの `.nvmrc` だけに書き、ほかのファイル(`engines.node` など)には書かない。Dev container の Node は `.nvmrc` に合わせる。Node を使う CI のジョブを作るときは、`actions/setup-node` の `node-version-file: .nvmrc` で入れる。`scripts/check-node-version.sh` が、動いている Node と Dev container の設定のメジャーバージョンを `.nvmrc` と比べる(コンテナの起動時に警告する)。
+- **pnpm**: ルートの `package.json` は、`apps/` を作るときに用意する。そのとき、バージョンは `packageManager` で固定し、`preinstall` から `scripts/check-node-version.sh` を実行する。依存の追加は `pnpm add`、実行は `pnpm --filter`・`pnpm exec`・`pnpm dlx` を使い、`npm install`・`yarn add`・`npx` は使わない。`pnpm-lock.yaml` をコミットし、依存を入れる CI のジョブを作るときは `pnpm install --frozen-lockfile` を使う。依存の install 時のスクリプトは、要るものだけを `pnpm approve-builds <パッケージ>` で 1 つずつ許可する。
 - **管理画面の秘密情報**: `VITE_` で始まる環境変数はビルド結果に埋め込まれるので、公開してよい値だけを入れる。localStorage・sessionStorage には表示の設定だけを置き、トークン・患者の ID・配信スケジュールのデータは置かない。
 
 ## 設計判断の記録
