@@ -155,6 +155,12 @@ pnpm dev                        # API(:3000)と管理画面(:5173)を起動す�
 `db:migrate`・`db:generate` は、Prisma のエンジンを `binaries.prisma.sh` から取得する。Dev container のファイアウォールの
 許可リスト(`.devcontainer/init-firewall.sh`)にこのホストがないと失敗する。
 
+DB なしで画面だけを確かめるときは、メモリ上のデータで API を起動する(止めるとデータは消える)。
+
+```sh
+pnpm --filter api dev:memory    # API(:3000)。pnpm --filter web dev と合わせて使う
+```
+
 テストと型の検査は `pnpm test`・`pnpm typecheck`(API の型の検査は、ORM のクライアントの生成が済んでいること)。
 
 レジメンのテンプレート(`apps/api/src/services/catalog/`)は、質問票と治療計画の初期値を入れるためだけに使う。
@@ -171,11 +177,14 @@ pnpm --filter api db:import-pro-ctcae     # データファイル(なければ P
 
 質問票の中では、PRO-CTCAE の質問文と選択肢は編集できず、API もマスタと違う文言を受け付けない。
 マスタが空のまま、またはテンプレートが使う症状がマスタにないまま画面を開くと、API はサーバのエラー(500)を返す。
+`dev:memory` は、起動時にデータファイル(なければ PDF)の内容をメモリ上のマスタに取り込む。
+
+外部の人に試してもらうための配り方(DB なし、合言葉つき)は [`docs/trial-deploy.md`](docs/trial-deploy.md)。
 
 `db:seed` は、PRO-CTCAE マスタが空ならデータファイル(なければ PDF)から取り込み、続けて治療計画のサンプル
 (レジメンのテンプレートごとに、「【サンプル】」で始まる治療計画と、その配信で使う質問票「PRO-CTCAE（A set）」)と、
 レジメンによらない短い質問票「PRO-CTCAE（B set）」を登録する。登録済みなら何もしない。
-サンプルの配信日(ベースライン、8 日目、15 日目)は画面の見本で、レジメンの資料にあるものではない。
+サンプルの配信日(ベースライン、8 日目、15 日目)は画面の見本で、レジメンの資料にあるものではない。`dev:memory` でも同じサンプルが入る。
 
 ## 開発の進め方
 
