@@ -49,12 +49,18 @@ export function createCatalogService(uow: UnitOfWork<Pick<Repositories, 'proCtca
       }),
 
     /** PRO-CTCAE マスタを、取り込んだ内容で置き換える。登録済みの質問票は、登録したときの文言のまま変わらない */
-    replaceProCtcae: (ctx: RequestContext, symptoms: ProCtcaeSymptom[]) => {
-      const codes = symptoms.flatMap((s) => s.items.map((i) => i.proCtcaeCode));
+    replaceProCtcae: async (ctx: RequestContext, symptoms: ProCtcaeSymptom[]) => {
+      const items = symptoms.flatMap((s) => s.items);
+      const codes = items.map((i) => i.proCtcaeCode);
       if (symptoms.length === 0 || new Set(codes).size !== codes.length || new Set(symptoms.map((s) => s.code)).size !== symptoms.length) {
         throw new ValidationError('PRO-CTCAE の取り込みの内容が正しくない(空、またはコードが重なっている)');
       }
-      return uow.run(ctx, ({ proCtcae }) => proCtcae.replaceAll(symptoms));
+      // マスタは、質問文と選択肢だけを持つ。それ以外の形(任意の質問、選択式でない、任意回答)は、読み出すときに保てないので受け付けない
+      const invalid = items.find(
+        (i) => i.source !== 'PRO_CTCAE' || !i.proCtcaeCode || i.answerType !== 'SINGLE_CHOICE' || !i.required || i.options.length < 2,
+      );
+      if (invalid) throw new ValidationError(`PRO-CTCAE の質問の形が正しくない: ${invalid.proCtcaeCode ?? invalid.text}`);
+      await uow.run(ctx, ({ proCtcae }) => proCtcae.replaceAll(symptoms));
     },
   };
 }

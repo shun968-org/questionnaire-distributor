@@ -150,3 +150,16 @@ test('seed: 治療計画のサンプルと、その配信で使う質問票を�
   expect((await call('PUT', `/questionnaires/${qid}`, qInput)).status).toBe(200);
   expect(questionnaires.every((q: any) => q.questionCount > 0)).toBe(true);
 });
+
+test('PRO-CTCAE マスタの取り込みは、マスタで保てない形の質問を受け付けない', async () => {
+  const service = createCatalogService(createMemoryUnitOfWork());
+  const ctx = { requestId: 'test' };
+  const base = symptom('NAUSEA', 1);
+  const withItem = (patch: object) => [{ ...base, items: [{ ...base.items[0]!, ...patch }] }];
+  await expect(service.replaceProCtcae(ctx, [])).rejects.toThrow('正しくない');
+  await expect(service.replaceProCtcae(ctx, [base, base])).rejects.toThrow('重なっている');
+  await expect(service.replaceProCtcae(ctx, withItem({ source: 'CUSTOM', proCtcaeCode: null }))).rejects.toThrow('形が正しくない');
+  await expect(service.replaceProCtcae(ctx, withItem({ answerType: 'TEXT' }))).rejects.toThrow('形が正しくない');
+  await expect(service.replaceProCtcae(ctx, withItem({ required: false }))).rejects.toThrow('形が正しくない');
+  await expect(service.replaceProCtcae(ctx, [base])).resolves.toBeUndefined();
+});
