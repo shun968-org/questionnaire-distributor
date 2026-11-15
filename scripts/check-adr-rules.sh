@@ -188,11 +188,28 @@ for f in "${before[@]}"; do
   fi
 done
 
+# 並行する PR が先に main へ入れた番号と重ならないよう、origin/main の先端の番号とも比べる
+max_hint="$base_label にある最大の番号"
+declare -A on_main=()
+if git rev-parse -q --verify "origin/main^{commit}" >/dev/null; then
+  tip_max=0
+  while IFS= read -r f; do
+    is_adr "$f" || continue
+    on_main[$f]=1
+    ((10#$(number_of "$f") > tip_max)) && tip_max=$((10#$(number_of "$f")))
+  done < <(git ls-tree --name-only origin/main -- "$ADR_DIR/")
+  if ((tip_max > max)); then
+    max=$tip_max
+    max_hint="ほかの PR が先に origin/main へ入れた最大の番号"
+  fi
+fi
+
 for f in "${current[@]}"; do
-  [ -n "${in_before[$f]:-}" ] && continue
+  # 比較元より後に main へ入った ADR は、新しく足したものではない
+  [ -n "${in_before[$f]:-}" ] || [ -n "${on_main[$f]:-}" ] && continue
   n="$(number_of "$f")"
   ((10#$n > max)) \
-    || report "$f: 新しい ADR の番号は、$base_label にある最大の番号 $(printf '%04d' "$max") より大きくする(欠番は再利用しない)"
+    || report "$f: 新しい ADR の番号は、$max_hint $(printf '%04d' "$max") より大きくする(欠番は再利用しない)"
 done
 
 [ "$violations" -eq 0 ]
