@@ -42,7 +42,7 @@ ADR-0001 で、画面(`apps/web`)と API(`apps/api`)を TypeScript で 1 つの�
 | ロックファイル | `pnpm-lock.yaml` を Git で管理する。CI では `pnpm install --frozen-lockfile` で入れる | `package-lock.json`・`yarn.lock` を置く |
 | 依存の追加・実行 | 追加は `pnpm add`、実行は `pnpm --filter <パッケージ> <スクリプト>`・`pnpm exec`・`pnpm dlx` を使う | `npm install`・`yarn add` で依存を入れる。`npx` で実行する |
 | 依存の install 時のスクリプト | 実行が必要なもの(Prisma・esbuild など)だけを、`pnpm approve-builds <パッケージ>` で `pnpm-workspace.yaml` の `allowBuilds` に 1 つずつ許可する | `pnpm approve-builds --all` などで、まとめて許可する。pnpm 10 より前のバージョンを使う |
-| workspace 内の参照 | ほかの workspace のパッケージを依存に書くときは `workspace:` プロトコルを使う | 相対パスやバージョン番号で、ほかの workspace のパッケージを依存に書く |
+| `apps/web` から `apps/api` の参照 | ADR-0003 のとおり、`apps/api/src/app.ts` の `AppType` をファイルのパスで `import type` する。`hc` を使うため、`hono` を `apps/web` の `package.json` に書く | `apps/api` を `apps/web` の依存に書く(`workspace:` プロトコルを含む)。パッケージ名での import は、パスで書いた ADR-0003 の lint をすり抜け、`AppType` 以外も import できてしまうため |
 
 ## 結果
 
@@ -51,6 +51,6 @@ ADR-0001 で、画面(`apps/web`)と API(`apps/api`)を TypeScript で 1 つの�
 - 未解決の保留事項: なし。
 - 移行作業:
   - ルートに `package.json`(`packageManager` を含む)と `pnpm-workspace.yaml` を作る。
-  - `apps/web` から `apps/api` の型を参照する方法(ADR-0003)を、`workspace:` プロトコルの依存として用意する。
+  - `apps/web` の `package.json` に `hono` を書き、`apps/api` の型は ADR-0003 のとおりファイルのパスで参照する。
   - 宣言していない依存の import を、lint(`import/no-extraneous-dependencies`)で検査する。
   - ADR-0002 の `prisma generate` を実行する手順を、ルートと `apps/api` の `package.json` のスクリプトに置く。
