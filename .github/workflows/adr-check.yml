@@ -2,16 +2,14 @@ name: adr-check
 
 # ADR の書式と運用規則を、PR を取り込んだ結果と、実行した時点の最新の main を比べて検査する。
 # pre-commit(lefthook)を --no-verify で回避したときや、実行した時点までにほかの PR が
-# main へ入れた ADR 番号との重なりを検出する。先行の PR が後からマージされても自動では
-# 再実行されないので、そのときは再実行する(CONTRIBUTING の「設計判断の記録」)。
+# main へ入れた ADR 番号との重なりを検出する。main の保護で必須のチェックにし、ブランチを
+# 最新の main にしてからでないとマージできないので、先行の PR がマージされた後は検査が走り直す。
+#
+# 必須のチェックは、起動しないとマージできなくなるため、paths で起動を絞らずに全 PR で動かし、
+# ADR に関係する変更が無ければ検査を飛ばして成功にする。
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
-    paths:
-      - docs/adr/**
-      - scripts/check-adr-*.sh
-      - scripts/lib/adr.sh
-      - .github/workflows/adr-check.yml
 
 # ラベルの付け外しや連続した push で、古い実行の結果が最後に残らないようにする
 concurrency:
@@ -20,6 +18,8 @@ concurrency:
 
 jobs:
   check:
+    # main の保護(scripts/setup-github-repo.sh)で、この名前を必須のチェックにしている
+    name: adr-check
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -33,15 +33,27 @@ jobs:
           # 比較元の origin/main を取得する
           fetch-depth: 0
 
+      - name: ADR に関係する変更があるか
+        id: changes
+        run: |
+          if git diff --quiet origin/main...HEAD -- docs/adr/ 'scripts/check-adr-*.sh' scripts/lib/adr.sh .github/workflows/adr-check.yml; then
+            echo "ADR に関係する変更が無いので、検査を飛ばす"
+            echo "adr=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "adr=true" >> "$GITHUB_OUTPUT"
+          fi
+
       # checkout した merge コミットは PR を作成・更新した時点の main を基にしている。
       # 比較元の origin/main(実行時点の最新)とそろえるため、最新の main を取り込んでから検査する。
       - name: 最新の main を取り込む
+        if: steps.changes.outputs.adr == 'true'
         run: |
           git -c user.name=adr-check -c user.email=adr-check@localhost merge --no-edit -q origin/main \
             || { echo "::error::最新の main と競合する。main に rebase して push する"; exit 1; }
 
       # PR で触っていない ADR の書式で止まらないよう、PR で追加・変更した ADR だけを検査する
       - name: 書式
+        if: steps.changes.outputs.adr == 'true'
         run: |
           mapfile -t files < <(git diff --name-only --diff-filter=ACMR origin/main...HEAD -- 'docs/adr/*.md')
           if [ "${#files[@]}" -gt 0 ]; then
@@ -49,5 +61,5 @@ jobs:
           fi
 
       - name: 運用規則
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.changes.outputs.adr == 'true' }}
         run: scripts/check-adr-rules.sh --base origin/main
