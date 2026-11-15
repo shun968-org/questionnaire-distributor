@@ -34,6 +34,7 @@ Claude にコミットさせるときは `/creating-commit`(または「コミ�
 
 1. PR を作る(テンプレートに沿って概要と確認内容を書く)。`Closes #番号` で Issue を紐付ける(必須)。タイトルは Conventional Commits 形式。
 2. GitHub の画面から **rebase マージ**する(squash・merge commit は無効)。コミットは粒度を変えずに `main` へ直線で並ぶ。
+   - マージには、ブランチが最新の `main` を含み、必須のチェック adr-check が成功していることが要る。ほかの PR が先にマージされてブランチが古くなったら、PR の画面の **Update branch** で rebase を選んで更新する(adr-check が走り直す)。更新した後は、手元のブランチも `git pull --rebase` で合わせる。
 
 ```sh
 gh pr create --title "feat: <要約>"   # 本文は対話またはテンプレートで個別に書く(--fill は使わない)
@@ -69,4 +70,4 @@ scripts/setup-github-repo.sh
 
 ADR を含むコミットでは、pre-commit で書式(`scripts/check-adr-format.sh`)と運用規則(`scripts/check-adr-rules.sh`)を検査する。`ADR_ALLOW_ADOPTED_EDIT=1 git commit` は、採用済み ADR の書き換えの検査(タイトル・日付・「コンテキスト」「決定」と、「結果」の既存の行)をすべて警告に下げる。採用済み ADR の誤字・リンクだけを直すコミットに限って使い、ほかの変更と混ぜない。
 
-PR では CI(`.github/workflows/adr-check.yml`)が、PR を取り込んだ結果を最新の `main` と比べて同じ検査をする。採用済み ADR の誤字・リンクだけを直す PR には、ラベル `adr-allow-adopted-edit` を付けて書き換えの検査を警告に下げる(通した書き換えは PR の画面に warning として出る)。ラベルは後の push にも効くので、その PR に別の変更を足すときはラベルを外す。検査は実行した時点の `main` と比べるので、ADR の PR が同時に開いているときは、片方をマージしたらもう片方の adr-check を再実行する(Actions の画面の Re-run、または `main` に rebase して push)。番号の重なりを検出するため。
+PR では CI(`.github/workflows/adr-check.yml`)が、PR を取り込んだ結果を最新の `main` と比べて同じ検査をする。採用済み ADR の誤字・リンクだけを直す PR には、ラベル `adr-allow-adopted-edit` を付けて書き換えの検査を警告に下げる(通した書き換えは PR の画面に warning として出る)。ラベルは後の push にも効くので、その PR に別の変更を足すときはラベルを外す。adr-check は main の保護で必須のチェックにしており、ブランチを最新の `main` にしてからでないとマージできないので、ADR の PR が同時に開いていても、先にマージされた ADR との番号の重なりは更新後の検査で検出される。
