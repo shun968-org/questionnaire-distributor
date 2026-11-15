@@ -32,6 +32,6 @@
     "PATH": "/home/vscode/.local/bin:${containerEnv:PATH}"
   },
   "postCreateCommand": "bash /workspace/.devcontainer/setup-git.sh",
-  "postStartCommand": "sudo /usr/local/bin/init-firewall.sh",
+  "postStartCommand": "sudo /usr/local/bin/init-firewall.sh && bash /workspace/.devcontainer/check-connectivity.sh",
   "waitFor": "postStartCommand"
 }
