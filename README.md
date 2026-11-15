@@ -62,6 +62,16 @@ cp .env.example .env
 | `GIT_USER_NAME` / `GIT_USER_EMAIL` | コミットの作者。メールは GitHub の noreply アドレスを推奨 |
 | `NOTION_API_TOKEN` | 要件定義・基本設計を Notion で扱う場合だけ。最小権限の内部インテグレーションのトークン |
 
+`GH_TOKEN` は GitHub の Settings → Developer settings → Fine-grained tokens で作る。作成画面では次のように設定する。
+
+- Resource owner: `shun968-org`
+- Repository access: 既定の「All repositories」ではなく、**「Only select repositories」で `questionnaire-distributor` だけ**を選ぶ
+  (All のままだと、組織のすべてのリポジトリに届くトークンを AI エージェントに渡すことになる)
+- Permissions: Contents・Issues・Pull requests を Read and write
+
+手で作る代わりに、`task rotate-gh-token`(後述)を使ってもよい。権限を入力済みの作成画面の URL を出し、
+貼り付けたトークンの対象がこのリポジトリだけであることを確かめてから `.env` に書き込む。
+
 ### 4. Dev container を開く
 
 VS Code でリポジトリを開き、コマンドパレットから **Dev Containers: Reopen in Container** を実行する。
