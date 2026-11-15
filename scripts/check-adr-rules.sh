@@ -8,10 +8,10 @@
 # 採用済み ADR の「コンテキスト」「決定」の誤字・リンクだけを直すときは、
 # ADR_ALLOW_ADOPTED_EDIT=1 を付けて実行する。
 set -euo pipefail
+# shellcheck source-path=SCRIPTDIR source=lib/adr.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib/adr.sh"
 
-ADR_DIR=docs/adr
 RESULT_ITEMS=(良い面 受け入れた不利益 未解決の保留事項 移行作業)
-SUPERSEDED_RE='^置換済み（ADR-([0-9]{4})）$'
 
 staged=false
 base=
@@ -44,12 +44,6 @@ if ! $base_given; then
 fi
 base_label="$base"
 $base_given || base_label="比較元 $(git rev-parse --short "$base" 2>/dev/null || echo "$base")"
-
-violations=0
-report() {
-  echo "NG: $1" >&2
-  violations=$((violations + 1))
-}
 
 # 番号で始まる ADR だけを扱う(番号の無いファイル名は check-adr-format.sh が検出する)
 is_adr() { [[ "$1" =~ ^$ADR_DIR/[0-9]{4}-[^/]+\.md$ ]]; }
@@ -102,7 +96,7 @@ for f in "${current[@]}"; do
 done
 
 for f in "${current[@]}"; do
-  [[ "${status_by[$f]}" =~ $SUPERSEDED_RE ]] || continue
+  [[ "${status_by[$f]}" =~ $ADR_SUPERSEDED_RE ]] || continue
   n="$(number_of "$f")"
   target="${BASH_REMATCH[1]}"
   if [ -z "${file_of[$target]:-}" ]; then
@@ -146,7 +140,7 @@ for f in "${before[@]}"; do
 
   new_status="${status_by[$f]}"
   if [ "$new_status" != 採用 ] && [ "$new_status" != 非推奨 ] \
-    && ! [[ "$new_status" =~ $SUPERSEDED_RE ]]; then
+    && ! [[ "$new_status" =~ $ADR_SUPERSEDED_RE ]]; then
     report "$f: 採用済み ADR のステータスは 非推奨 か 置換済み（ADR-XXXX） にだけ変えられる(今は '$new_status')"
   fi
 
