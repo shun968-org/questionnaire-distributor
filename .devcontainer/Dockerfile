@@ -38,6 +38,10 @@ RUN mkdir -p /home/vscode/.claude && chown vscode:vscode /home/vscode/.claude
 USER vscode
 
 RUN curl -fsSL https://claude.ai/install.sh | bash
-RUN curl -fsSL https://ntn.dev | bash
+# ntn は .env のトークンを実行中だけ渡すラッパー経由で使う(秘密をコンテナの環境変数にしない)
+RUN curl -fsSL https://ntn.dev | bash \
+    && mkdir -p /home/vscode/.local/libexec \
+    && mv /home/vscode/.local/bin/ntn /home/vscode/.local/libexec/ntn
+COPY --chown=vscode:vscode ntn-wrapper.sh /home/vscode/.local/bin/ntn
 
 WORKDIR /workspace

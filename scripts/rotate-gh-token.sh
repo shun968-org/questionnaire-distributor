@@ -108,4 +108,10 @@ else
   echo "5. .env に古いトークンがない(または新しいトークンと同じ)ので、無効化は省いた。"
 fi
 
-echo "6. コンテナに反映するため、VS Code で「Dev Containers: Rebuild Container」を実行する。"
+# 6. gh のログインを新しいトークンに切り替える(コンテナ内で実行したとき)
+if [ -f "$root/.devcontainer/setup-gh.sh" ] && [ -f /.dockerenv ]; then
+  bash "$root/.devcontainer/setup-gh.sh"
+  echo "6. gh と git の push は新しいトークンに切り替わった(作り直しは要らない)。"
+else
+  echo "6. コンテナの外で実行したので、コンテナを再起動すると新しいトークンに切り替わる。"
+fi
