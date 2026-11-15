@@ -1,15 +1,3 @@
-# gcloud でソースから配備するときに、送らないもの(.dockerignore と同じ内容。これがないと .gitignore が使われ、apps/api/data/ が送られない)
-.git
-.env
-.env.*
-**/node_modules
-**/dist
-**/.pgdata
-apps/api/src/db/generated
-# 参考として置いた資料(PRO-CTCAE 日本語版の PDF、レジメンの資料)は配布しない
-docs
-*.pdf
-*.zip
-.claude
-.devcontainer
-.github
+# gcloud でソースから配備するときに、送らないもの。.dockerignore と同じにするため、取り込むだけにする(手で写さない)。
+# このファイルがないと .gitignore が使われ、apps/api/data/(マスタのデータファイル)が送られない。
+#!include:.dockerignore
