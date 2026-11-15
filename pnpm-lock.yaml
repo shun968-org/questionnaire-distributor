@@ -208,6 +208,9 @@ importers:
       embedded-postgres:
         specifier: 18.6.0-beta.19
         version: 18.6.0-beta.19
+      esbuild:
+        specifier: ^0.28.2
+        version: 0.28.2
       pdfjs-dist:
         specifier: ^6.5.438
         version: 6.5.438

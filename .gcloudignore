@@ -1,0 +1,3 @@
+# gcloud でソースから配備するときに、送らないもの。.dockerignore と同じにするため、取り込むだけにする(手で写さない)。
+# このファイルがないと .gitignore が使われ、apps/api/data/(マスタのデータファイル)が送られない。
+#!include:.dockerignore

@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
+    "dev:memory": "tsx watch src/dev-memory.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "db:dev": "tsx scripts/dev-db.ts",
@@ -13,7 +14,9 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:import-pro-ctcae": "tsx scripts/import-pro-ctcae.ts",
-    "pro-ctcae:export": "tsx scripts/export-pro-ctcae.ts"
+    "pro-ctcae:export": "tsx scripts/export-pro-ctcae.ts",
+    "start:memory": "tsx src/dev-memory.ts",
+    "build:trial": "esbuild src/dev-memory.ts --bundle --platform=node --format=esm --target=node26 --external:pdfjs-dist --outfile=dist/trial.mjs"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.8",
@@ -28,6 +31,7 @@
     "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
     "embedded-postgres": "18.6.0-beta.19",
+    "esbuild": "^0.28.2",
     "pdfjs-dist": "^6.5.438",
     "prisma": "^7.10.1",
     "tsx": "^4.23.15",
