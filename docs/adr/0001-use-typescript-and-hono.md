@@ -42,4 +42,4 @@ Go 用の Prisma Client(`steebchen/prisma-client-go`)は Prisma v7 以降に対�
 - 移行作業:
   - `apps/web`・`apps/api` を作り、`tsconfig` の `strict` を有効にする。
   - パッケージマネージャ(npm か pnpm か)は、別の ADR または README で決める。
-- 追記(2026-11-15): パッケージマネージャは ADR-0005 で pnpm に決めた。上の「未解決の保留事項: なし。」は、このパッケージマネージャが未決定だったことを含んでいなかった。
+- 追記(2026-11-15): 「移行作業」の「パッケージマネージャ(npm か pnpm か)は、別の ADR または README で決める。」は、ADR-0005 で pnpm に決めて済んだ。この ADR の採用時点では未決定だったが、「未解決の保留事項」には含めていなかった。
