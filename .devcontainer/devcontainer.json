@@ -24,7 +24,8 @@
   ],
   "containerEnv": {
     "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
-    "NOTION_API_VERSION": "2025-09-03"
+    "NOTION_API_VERSION": "2025-09-03",
+    "CHECKPOINT_DISABLE": "1"
   },
   "remoteEnv": {
     "PATH": "/home/vscode/.local/bin:${containerEnv:PATH}"
