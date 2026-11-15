@@ -65,12 +65,17 @@ cp .env.example .env
 ### 4. Dev container を開く
 
 VS Code でリポジトリを開き、コマンドパレットから **Dev Containers: Reopen in Container** を実行する。
-起動時に次が自動で行われる。
+次の処理が自動で行われる。
 
-- ファイアウォールの適用と、開発で使うホストへの疎通確認(`.devcontainer/check-connectivity.sh`)
-- `.env` の値で git の作者を設定し、`gh` にログインして `git push` の認証に使う
-- lefthook の Git hooks のインストール
-- Node のバージョンが `.nvmrc` と一致するかの確認
+| いつ | 処理 |
+| --- | --- |
+| コンテナの作成時だけ | `.env` の `GIT_USER_NAME`・`GIT_USER_EMAIL` で git の作者を設定し、lefthook の Git hooks をインストールする(`.devcontainer/setup-git.sh`) |
+| 起動のたび | ファイアウォールの適用と、開発で使うホストへの疎通確認(`.devcontainer/check-connectivity.sh`) |
+| 起動のたび | `.env` の `GH_TOKEN` で `gh` にログインし、`git push` の認証に使う(`.devcontainer/setup-gh.sh`) |
+| 起動のたび | Node のバージョンが `.nvmrc` と一致するかの確認 |
+
+git の作者はコンテナの作成時にしか設定されない。作成後に `.env` の `GIT_USER_NAME`・`GIT_USER_EMAIL` を変えたときは、
+**Dev Containers: Rebuild Container** で作り直す(再起動だけでは反映されない)。
 
 起動ログに失敗や警告が出ていないことを確かめ、ターミナルで次を実行して確認する。
 
