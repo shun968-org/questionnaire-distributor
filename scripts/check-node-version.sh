@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Node のメジャーバージョンが .nvmrc と一致するかを検査する(ADR-0006)。.nvmrc を基準とし、ずれたら .nvmrc に合わせる。
+# Node のメジャーバージョンが .nvmrc と一致するかを検査する(CONTRIBUTING の「開発環境と依存の扱い」)。.nvmrc を基準とし、ずれたら .nvmrc に合わせる。
 # 検査すること:
 #   - 動いている Node のメジャーバージョン
 #   - .devcontainer/devcontainer.json の Node の feature に version が書いてあれば、そのメジャーバージョン
