@@ -31,18 +31,25 @@ const toDomain = (row: Row): Group => ({
 export function createGroupRepository(tx: Prisma.TransactionClient): GroupRepository {
   return {
     async list() {
+      // 患者の数は、行を読まずに DB で数える
       const rows = await tx.patientGroup.findMany({
         orderBy: { createdAt: 'desc' },
-        include: { plan: { select: { name: true } }, patients: { select: { status: true } } },
+        include: { plan: { select: { name: true } }, _count: { select: { patients: true } } },
       });
+      const suspended = await tx.patient.groupBy({
+        by: ['groupId'],
+        where: { status: 'SUSPENDED' },
+        _count: { _all: true },
+      });
+      const suspendedCounts = new Map(suspended.map((s) => [s.groupId, s._count._all]));
       return rows.map((r) => ({
         id: r.id,
         name: r.name,
         planId: r.planId,
         planName: r.plan?.name ?? null,
         confirmedAt: r.confirmedAt?.toISOString() ?? null,
-        patientCount: r.patients.length,
-        suspendedCount: r.patients.filter((p) => p.status === 'SUSPENDED').length,
+        patientCount: r._count.patients,
+        suspendedCount: suspendedCounts.get(r.id) ?? 0,
       }));
     },
 
